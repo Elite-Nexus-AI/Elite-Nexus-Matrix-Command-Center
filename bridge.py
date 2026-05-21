@@ -298,7 +298,7 @@ def chat_stream(req: ChatReq, _=Depends(require_auth)):
     HERMES_DIR = Path.home() / "hermes-agent"
     HERMES_CLI = str(HERMES_DIR / "cli.py")
     SESSION_FILE = Path.home() / ".hermes" / "matrix_hud_session.json"
-    OPENROUTER_KEY = "OPENROUTER_KEY_HERE"
+    OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "OPENROUTER_KEY_HERE")
     def get_session():
         try:
             if SESSION_FILE.exists():
@@ -497,7 +497,7 @@ class WebcamAnalyzeReq(BaseModel):
 def webcam_analyze(req: WebcamAnalyzeReq, _=Depends(require_auth)):
     import cv2, base64, time, subprocess, tempfile, re as _re
     from pathlib import Path
-    OPENROUTER_KEY = "OPENROUTER_KEY_HERE"
+    OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "OPENROUTER_KEY_HERE")
     try:
         cap = cv2.VideoCapture(0)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
