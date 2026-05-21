@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.git/
+*.bak*
+*.bak2
+data/llm_usage.json
