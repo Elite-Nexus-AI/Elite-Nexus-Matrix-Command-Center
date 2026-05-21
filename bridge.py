@@ -329,6 +329,7 @@ def chat_stream(req: ChatReq, _=Depends(require_auth)):
                "--query", query,
                "--model", "anthropic/claude-sonnet-4",
                "--provider", "openrouter",
+               "--skills", "google-workspace",
                "--quiet"]
         if session_id:
             cmd.extend(["--resume", session_id])
@@ -518,6 +519,7 @@ def webcam_analyze(req: WebcamAnalyzeReq, _=Depends(require_auth)):
                "--image", tmp.name,
                "--model", "anthropic/claude-sonnet-4",
                "--provider", "openrouter",
+               "--skills", "google-workspace",
                "--quiet"]
         try:
             sid = json.loads(SESSION_FILE.read_text()).get("session_id") if SESSION_FILE.exists() else None
