@@ -1,0 +1,552 @@
+#!/usr/bin/env python3
+"""
+Matrix Bridge — local FastAPI service for the Elite Nexus AI HUD.
+
+Runs on the user's Zorin OS box. Exposes:
+  GET  /health
+  GET  /metrics/system
+  GET  /metrics/gpu
+  GET  /metrics/llm
+  GET  /agents
+  GET  /vaults
+  POST /chat            { messages, model?, persona? }
+  POST /tts             { text, voice? }      → audio/wav
+
+Auth: Authorization: Bearer $MATRIX_BRIDGE_TOKEN  (must match the HUD env)
+"""
+
+from __future__ import annotations
+
+import io
+import json
+import os
+import re
+import subprocess
+import time
+import wave
+from pathlib import Path
+from typing import Any
+
+import psutil
+import requests
+from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
+from pydantic import BaseModel
+
+# ── config ─────────────────────────────────────────────────
+ROOT = Path(__file__).resolve().parent
+DATA = ROOT / "data"
+DATA.mkdir(exist_ok=True)
+
+TOKEN = os.environ.get("MATRIX_BRIDGE_TOKEN", "")
+OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
+DEFAULT_MODEL = os.environ.get("MATRIX_DEFAULT_MODEL", "hermes3:8b")
+
+# Piper TTS — set to your installed binary + British female .onnx voice
+PIPER_BIN = os.environ.get("PIPER_BIN", "piper")
+PIPER_VOICE = os.environ.get("PIPER_VOICE", "")  # e.g. /home/you/piper/voices/en_GB-jenny_dioco-medium.onnx
+PIPER_LENGTH_SCALE = float(os.environ.get("PIPER_LENGTH_SCALE", "1.0"))
+PIPER_NOISE_SCALE = float(os.environ.get("PIPER_NOISE_SCALE", "0.667"))
+PIPER_NOISE_W = float(os.environ.get("PIPER_NOISE_W", "0.8"))
+
+# Persona presets — 'lara-croft' is the default for Matrix
+DEFAULT_PERSONA = os.environ.get("MATRIX_DEFAULT_PERSONA", "lara-croft")
+
+PERSONAS: dict[str, str] = {
+    "lara-croft": (
+        "You are MATRIX — the personal AI cockpit of Elite Nexus AI, with the persona of "
+        "Lara Croft: a sharp, witty, refined British woman. Confident, dry humor, "
+        "exceedingly competent, mission-focused. Speak in clean British English (RP), "
+        "warm but never sycophantic. Keep answers concise and actionable; cut the fluff. "
+        "When uncertain, say so plainly. You operate locally via Ollama (Hermes) on a "
+        "dual RTX 3090 / i9 / 128 GB rig running Zorin OS, and you have telemetry on the "
+        "user's GPUs, CPU, RAM, LLM spend, agent roster, and two Obsidian vaults. "
+        "Do not pretend to take physical actions you cannot perform; instead, propose "
+        "the exact command, code, or agent task to run."
+    ),
+    "jarvis": (
+        "You are MATRIX, the user's Jarvis-style cockpit AI: precise, formal, "
+        "British, dryly witty, efficient. Brief and accurate."
+    ),
+    "raw": "You are a helpful assistant.",
+}
+
+# Optional persona override file (single line of text)
+PERSONA_FILE = ROOT / "persona.txt"
+if PERSONA_FILE.exists():
+    try:
+        PERSONAS["custom"] = PERSONA_FILE.read_text().strip()
+    except Exception:
+        pass
+
+VAULT_PATHS = [
+    p.strip() for p in os.environ.get(
+        "OBSIDIAN_VAULTS",
+        f"{Path.home()}/Obsidian/Codex,{Path.home()}/Obsidian/Operations",
+    ).split(",") if p.strip()
+]
+
+LLM_USAGE_FILE = DATA / "llm_usage.json"
+AGENTS_FILE = DATA / "agents.json"
+
+
+# ── auth ───────────────────────────────────────────────────
+def require_auth(authorization: str | None = Header(default=None)) -> None:
+    if not TOKEN:
+        return
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(401, "missing bearer token")
+    if authorization.split(None, 1)[1].strip() != TOKEN:
+        raise HTTPException(403, "invalid token")
+
+
+app = FastAPI(title="Matrix Bridge", version="1.1.0")
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+
+# ── helpers ────────────────────────────────────────────────
+def _read_json(path: Path, default: Any) -> Any:
+    if not path.exists():
+        return default
+    try:
+        return json.loads(path.read_text())
+    except Exception:
+        return default
+
+
+def _nvidia_smi() -> list[dict]:
+    fields = (
+        "index,name,temperature.gpu,utilization.gpu,"
+        "memory.used,memory.total,power.draw,power.limit,fan.speed"
+    )
+    try:
+        out = subprocess.check_output(
+            ["nvidia-smi", f"--query-gpu={fields}", "--format=csv,noheader,nounits"],
+            timeout=2,
+        ).decode().strip()
+    except Exception as e:
+        raise HTTPException(503, f"nvidia-smi unavailable: {e}")
+    gpus: list[dict] = []
+    for line in out.splitlines():
+        parts = [p.strip() for p in line.split(",")]
+        if len(parts) < 9:
+            continue
+        gpus.append({
+            "index": int(parts[0]),
+            "name": parts[1],
+            "tempC": float(parts[2]),
+            "utilPct": float(parts[3]),
+            "memUsedMb": float(parts[4]),
+            "memTotalMb": float(parts[5]),
+            "powerW": float(parts[6]),
+            "powerLimitW": float(parts[7]),
+            "fanPct": float(parts[8]) if parts[8] not in ("N/A", "[N/A]") else 0.0,
+        })
+    return gpus
+
+
+def _cpu_voltage() -> float | None:
+    try:
+        out = subprocess.check_output(["sensors", "-u"], timeout=2).decode()
+    except Exception:
+        return None
+    m = re.search(r"in\d+_input:\s*([\d.]+)", out)
+    return float(m.group(1)) if m else None
+
+
+def _cpu_temp() -> float | None:
+    try:
+        temps = psutil.sensors_temperatures()
+    except Exception:
+        return None
+    for key in ("coretemp", "k10temp", "zenpower", "cpu_thermal"):
+        if key in temps and temps[key]:
+            return float(temps[key][0].current)
+    if temps:
+        first = next(iter(temps.values()))
+        if first:
+            return float(first[0].current)
+    return None
+
+
+def _scan_vault(path: Path) -> dict:
+    if not path.exists() or not path.is_dir():
+        return {"name": path.name or str(path), "noteCount": 0, "nodes": [], "links": []}
+    notes: dict[str, str] = {}
+    files: dict[str, Path] = {}
+    for md in path.rglob("*.md"):
+        stem = md.stem
+        notes[stem.lower()] = stem
+        files[stem.lower()] = md
+    link_re = re.compile(r"\[\[([^\]\|#]+)(?:[#\|][^\]]*)?\]\]")
+    links: list[dict] = []
+    for stem_l, fp in files.items():
+        try:
+            txt = fp.read_text(errors="ignore")
+        except Exception:
+            continue
+        for m in link_re.finditer(txt):
+            target = m.group(1).strip().split("/")[-1].lower()
+            if target in notes and target != stem_l:
+                links.append({"source": stem_l, "target": target})
+    keep = list(notes.keys())[:200]
+    keep_set = set(keep)
+    nodes = [{"id": k, "label": notes[k], "size": 1} for k in keep]
+    flinks = [l for l in links if l["source"] in keep_set and l["target"] in keep_set]
+    return {"name": path.name, "noteCount": len(notes), "nodes": nodes, "links": flinks}
+
+
+# ── routes ─────────────────────────────────────────────────
+@app.get("/health")
+def health(_=Depends(require_auth)):
+    # Probe Ollama availability + default model presence
+    hermes_ok = False
+    try:
+        r = requests.get(f"{OLLAMA_URL}/api/tags", timeout=1.5)
+        if r.ok:
+            tags = [m.get("name", "") for m in r.json().get("models", [])]
+            hermes_ok = any(t.startswith(DEFAULT_MODEL.split(":")[0]) for t in tags)
+    except Exception:
+        hermes_ok = False
+    piper_ok = bool(PIPER_VOICE) and Path(PIPER_VOICE).exists()
+    return {
+        "ok": True,
+        "ts": time.time(),
+        "hermes": hermes_ok,
+        "model": DEFAULT_MODEL,
+        "persona": DEFAULT_PERSONA,
+        "tts": piper_ok,
+    }
+
+
+@app.get("/metrics/gpu")
+def metrics_gpu(_=Depends(require_auth)):
+    return _nvidia_smi()
+
+
+@app.get("/metrics/system")
+def metrics_system(_=Depends(require_auth)):
+    cpu_pct = psutil.cpu_percent(interval=0.0)
+    per_core = psutil.cpu_percent(interval=0.0, percpu=True)
+    freq = psutil.cpu_freq()
+    vm = psutil.virtual_memory()
+    parts = psutil.disk_partitions(all=False)
+    disks = []
+    for p in parts:
+        try:
+            u = psutil.disk_usage(p.mountpoint)
+            disks.append({"mount": p.mountpoint, "usedGb": u.used / 1e9, "totalGb": u.total / 1e9})
+        except Exception:
+            continue
+    return {
+        "cpu": {
+            "overallPct": cpu_pct,
+            "perCorePct": per_core,
+            "freqMhz": float(freq.current) if freq else 0.0,
+            "voltageV": _cpu_voltage(),
+            "tempC": _cpu_temp(),
+        },
+        "ram": {"usedGb": (vm.total - vm.available) / 1e9, "totalGb": vm.total / 1e9},
+        "disks": disks,
+        "uptimeSec": time.time() - psutil.boot_time(),
+    }
+
+
+@app.get("/metrics/llm")
+def metrics_llm(_=Depends(require_auth)):
+    return _read_json(LLM_USAGE_FILE, {
+        "freeTokensUsed": 0, "freeTokensWindow": "rolling 24h",
+        "paidUsdSpent": 0.0, "paidUsdToday": 0.0, "models": [],
+    })
+
+
+@app.get("/agents")
+def agents(_=Depends(require_auth)):
+    return _read_json(AGENTS_FILE, [])
+
+
+@app.get("/vaults")
+def vaults(_=Depends(require_auth)):
+    return [_scan_vault(Path(p).expanduser()) for p in VAULT_PATHS]
+
+
+# ── chat (Hermes via Ollama, with persona injection) ───────
+class ChatMsg(BaseModel):
+    role: str
+    content: str
+
+
+class ChatReq(BaseModel):
+    messages: list[ChatMsg]
+    model: str | None = None
+    persona: str | None = None
+
+
+@app.get("/personas")
+def personas_list(_=Depends(require_auth)):
+    return {
+        "default": DEFAULT_PERSONA,
+        "personas": [
+            {"key": k, "label": k.replace("-", " ").title()}
+            for k in PERSONAS.keys()
+        ],
+    }
+
+
+@app.post("/chat")
+def chat(req: ChatReq, _=Depends(require_auth)):
+    model = req.model or DEFAULT_MODEL
+    persona_key = (req.persona or DEFAULT_PERSONA).lower()
+    persona_prompt = PERSONAS.get(persona_key) or PERSONAS[DEFAULT_PERSONA]
+
+    # Ensure exactly one system message at the top with the persona
+    msgs = [m.model_dump() for m in req.messages if m.role != "system"]
+    payload = {
+        "model": model,
+        "messages": [{"role": "system", "content": persona_prompt}, *msgs],
+        "stream": False,
+        "options": {"temperature": 0.7},
+    }
+    try:
+        r = requests.post(f"{OLLAMA_URL}/api/chat", json=payload, timeout=180)
+        r.raise_for_status()
+        data = r.json()
+    except Exception as e:
+        raise HTTPException(502, f"ollama error: {e}")
+    reply = (data.get("message") or {}).get("content", "")
+    return {"reply": reply, "model": model, "persona": persona_key}
+
+
+# ── Streaming chat (SSE proxy of Ollama) ───────────────────────────
+from fastapi.responses import StreamingResponse
+
+
+@app.post("/chat/stream")
+def chat_stream(req: ChatReq, _=Depends(require_auth)):
+    """
+    Streams Hermes tokens as Server-Sent Events.
+      event: token   data: {"text":"..."}
+      event: done    data: {"model":"hermes3:8b","persona":"lara-croft"}
+      event: error   data: {"error":"..."}
+    """
+    model = req.model or DEFAULT_MODEL
+    persona_key = (req.persona or DEFAULT_PERSONA).lower()
+    persona_prompt = PERSONAS.get(persona_key) or PERSONAS[DEFAULT_PERSONA]
+    msgs = [m.model_dump() for m in req.messages if m.role != "system"]
+    payload = {
+        "model": model,
+        "messages": [{"role": "system", "content": persona_prompt}, *msgs],
+        "stream": True,
+        "options": {"temperature": 0.7},
+    }
+
+    def gen():
+        try:
+            with requests.post(f"{OLLAMA_URL}/api/chat", json=payload, stream=True, timeout=300) as r:
+                r.raise_for_status()
+                for line in r.iter_lines(decode_unicode=True):
+                    if not line:
+                        continue
+                    try:
+                        obj = json.loads(line)
+                    except Exception:
+                        continue
+                    chunk = (obj.get("message") or {}).get("content") or ""
+                    if chunk:
+                        yield f"event: token\ndata: {json.dumps({'text': chunk})}\n\n"
+                    if obj.get("done"):
+                        yield f"event: done\ndata: {json.dumps({'model': model, 'persona': persona_key})}\n\n"
+                        return
+        except Exception as e:
+            yield f"event: error\ndata: {json.dumps({'error': str(e)[:300]})}\n\n"
+
+    return StreamingResponse(
+        gen(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+# ── Piper TTS ───────────────────────────────────────────────────
+class TtsReq(BaseModel):
+    text: str
+    voice: str | None = None  # absolute path to .onnx voice (overrides PIPER_VOICE)
+
+
+def _strip_for_tts(s: str) -> str:
+    s = re.sub(r"```[\s\S]*?```", " ", s)
+    s = re.sub(r"`[^`]*`", " ", s)
+    s = re.sub(r"[*_~>#]", "", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    return s[:4000]
+
+
+@app.post("/tts")
+def tts(req: TtsReq, _=Depends(require_auth)):
+    voice = req.voice or PIPER_VOICE
+    if not voice:
+        raise HTTPException(503, "PIPER_VOICE not configured")
+    if not Path(voice).exists():
+        raise HTTPException(503, f"piper voice not found: {voice}")
+    text = _strip_for_tts(req.text or "")
+    if not text:
+        raise HTTPException(400, "empty text")
+
+    cmd = [
+        PIPER_BIN,
+        "--model", voice,
+        "--output_file", "-",
+        "--length_scale", str(PIPER_LENGTH_SCALE),
+        "--noise_scale", str(PIPER_NOISE_SCALE),
+        "--noise_w", str(PIPER_NOISE_W),
+    ]
+    try:
+        proc = subprocess.run(
+            cmd, input=text.encode("utf-8"),
+            capture_output=True, timeout=60, check=True,
+        )
+    except FileNotFoundError:
+        raise HTTPException(503, f"piper binary not found: {PIPER_BIN}")
+    except subprocess.CalledProcessError as e:
+        raise HTTPException(500, f"piper failed: {e.stderr.decode(errors='ignore')[:500]}")
+
+    wav = proc.stdout
+    if not wav or len(wav) < 64:
+        raise HTTPException(500, "piper returned empty audio")
+
+    # Validate header (best-effort)
+    try:
+        with wave.open(io.BytesIO(wav)) as wf:
+            wf.getframerate()
+    except Exception:
+        # Not all Piper builds emit a RIFF header; pass bytes through anyway.
+        pass
+
+    return Response(content=wav, media_type="audio/wav")
+
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("BRIDGE_PORT", "8765"))
+    uvicorn.run("bridge:app", host="0.0.0.0", port=port, log_level="info")
+
+from fastapi.responses import FileResponse
+import pathlib
+
+@app.get("/")
+def root():
+    return FileResponse(pathlib.Path(__file__).parent / "index.html")
+
+
+# ── Browser TTS helper ──────────────────────────────────────
+@app.post("/tts/browser")
+def tts_browser(_=Depends(require_auth)):
+    return {"ok": True, "engine": "browser"}
+
+# ── Whisper STT ─────────────────────────────────────────────
+import base64, tempfile
+
+class SttReq(BaseModel):
+    base64audio: str
+    mimetype: str = "audio/webm"
+
+@app.post("/stt")
+def stt(req: SttReq, _=Depends(require_auth)):
+    import whisper
+    audio_bytes = base64.b64decode(req.base64audio)
+    with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as f:
+        f.write(audio_bytes)
+        tmp_path = f.name
+    try:
+        model = whisper.load_model("tiny")
+        result = model.transcribe(tmp_path, language="en")
+        return {"text": result["text"].strip()}
+    finally:
+        import os; os.unlink(tmp_path)
+
+# ── Browser TTS helper ──────────────────────────────────────
+@app.post("/tts/browser")
+def tts_browser(_=Depends(require_auth)):
+    return {"ok": True, "engine": "browser"}
+
+# ── Whisper STT ─────────────────────────────────────────────
+import base64, tempfile
+
+class SttReq(BaseModel):
+    base64audio: str
+    mimetype: str = "audio/webm"
+
+@app.post("/stt")
+def stt(req: SttReq, _=Depends(require_auth)):
+    import whisper
+    audio_bytes = base64.b64decode(req.base64audio)
+    with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as f:
+        f.write(audio_bytes)
+        tmp_path = f.name
+    try:
+        model = whisper.load_model("tiny")
+        result = model.transcribe(tmp_path, language="en")
+        return {"text": result["text"].strip()}
+    finally:
+        import os; os.unlink(tmp_path)
+
+# ── Edge TTS (Sonia Neural - British Female) ────────────────
+import asyncio, io as _io
+
+class EdgeTtsReq(BaseModel):
+    text: str
+    voice: str = "en-GB-SoniaNeural"
+
+@app.post("/tts/edge")
+async def tts_edge(req: EdgeTtsReq, _=Depends(require_auth)):
+    import edge_tts
+    text = _strip_for_tts(req.text or "")
+    if not text:
+        raise HTTPException(400, "empty text")
+    communicate = edge_tts.Communicate(text, req.voice)
+    buf = _io.BytesIO()
+    async for chunk in communicate.stream():
+        if chunk["type"] == "audio":
+            buf.write(chunk["data"])
+    audio = buf.getvalue()
+    if not audio:
+        raise HTTPException(500, "no audio returned")
+    return Response(content=audio, media_type="audio/mpeg")
+
+# ── Terminal execution endpoint ─────────────────────────────
+import shlex
+
+class RunReq(BaseModel):
+    command: str
+
+@app.post("/run")
+def run_command(req: RunReq, _=Depends(require_auth)):
+    command = req.command.strip()
+    if not command:
+        raise HTTPException(400, "empty command")
+    # Block dangerous commands
+    blocked = ["rm -rf /", "mkfs", "dd if=/dev/zero", ":(){:|:&};:"]
+    for b in blocked:
+        if b in command:
+            raise HTTPException(403, f"blocked command: {b}")
+    try:
+        result = subprocess.run(
+            command,
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=str(Path.home())
+        )
+        output = result.stdout or ""
+        error  = result.stderr or ""
+        return {
+            "output": output,
+            "error": error,
+            "returncode": result.returncode
+        }
+    except subprocess.TimeoutExpired:
+        raise HTTPException(408, "command timed out after 30s")
+    except Exception as e:
+        raise HTTPException(500, str(e))
