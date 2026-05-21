@@ -7,3 +7,4 @@ __pycache__/
 *.bak*
 *.bak2
 data/llm_usage.json
+config.sh
