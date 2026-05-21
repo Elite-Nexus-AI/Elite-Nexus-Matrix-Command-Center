@@ -369,6 +369,9 @@ body{
                 <rect x="9" y="3" width="6" height="10" rx="3"/><path d="M19 10a7 7 0 0 1-14 0M12 19v2M8 22h8"/>
               </svg>
             </button>
+            <button class="cmd-btn" id="cam-btn"
+              style="border-color:var(--mag);box-shadow:0 0 8px var(--mag);background:oklch(0.7 0.28 330/0.06)"
+              onclick="triggerWebcam()" title="Webcam vision — see what Hermes sees">📷</button>
             <button class="cmd-btn" id="mute-btn"
               style="border-color:var(--mag);box-shadow:0 0 8px oklch(0.7 0.28 330/0.6);background:oklch(0.7 0.28 330/0.06)"
               onclick="toggleMute()" title="Toggle TTS">
@@ -1074,6 +1077,23 @@ async function runSlash(cmd){
       catch(e){addMsg('system','Run failed: '+e.message);}
       return true;
     case 'agent': openModal('agent-modal'); return true;
+    case 'look': case 'webcam': case 'camera':
+      addMsg('user', '/look');
+      clearInput();
+      const _lookDiv = addMsg('ai', '📷 Capturing webcam frame...');
+      fetch('/webcam/analyze', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'Content-Type': 'application/json'},
+        body: JSON.stringify({prompt: 'Describe in detail what you see in this webcam image. Be specific about people, their expressions, objects, text, colors, lighting, and spatial relationships.'})
+      }).then(function(r){ return r.json(); }).then(function(d){
+        var msgs = document.querySelectorAll('.msg-ai');
+        var last = msgs[msgs.length - 1];
+        if(last){
+          last.querySelector('.msg-text').textContent = d.ok ? d.description : 'Webcam error: ' + d.error;
+          if(d.ok && typeof speakText === 'function') speakText(d.description);
+        }
+      }).catch(function(e){ console.error('webcam error', e); });
+      return true;
     case 'help': case '?':
       addMsg('system',
         'Slash commands:\n'+
@@ -1332,6 +1352,25 @@ function init(){
 renderPersonaDD();setPersona(currentPersona,false);
 if(muted)toggleMute();
 init();
+
+  function triggerWebcam(){
+    var btn = document.getElementById("cam-btn");
+    if(btn) btn.style.opacity = "0.4";
+    var div = addMsg("ai", "📷 Capturing webcam frame...");
+    fetch("/webcam/analyze", {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "Content-Type": "application/json"},
+      body: JSON.stringify({prompt: "Describe in detail what you see in this webcam image. Be specific about people, their expressions, objects, text, colors, lighting, and spatial relationships."})
+    }).then(function(r){ return r.json(); }).then(function(d){
+      var result = d.ok ? d.description : "Webcam error: " + d.error;
+      addMsg("ai", result);
+      if(d.ok && typeof speakText === "function") speakText(d.description);
+      if(btn) btn.style.opacity = "1";
+    }).catch(function(e){
+      addMsg("ai", "Webcam error: " + e.message);
+      if(btn) btn.style.opacity = "1";
+    });
+  }
 </script>
 </body>
 </html>

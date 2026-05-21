@@ -35,7 +35,7 @@ ROOT          = Path(__file__).resolve().parent
 DATA          = ROOT / "data"; DATA.mkdir(exist_ok=True)
 TOKEN         = os.environ.get("MATRIX_BRIDGE_TOKEN", "")
 OLLAMA_URL    = os.environ.get("OLLAMA_URL", "http://localhost:11434")
-DEFAULT_MODEL = os.environ.get("MATRIX_DEFAULT_MODEL", "hermes3:8b")
+DEFAULT_MODEL = os.environ.get("MATRIX_DEFAULT_MODEL", "qwen3.5:27b")
 DEFAULT_PERSONA = os.environ.get("MATRIX_DEFAULT_PERSONA", "lara-croft")
 PIPER_BIN     = os.environ.get("PIPER_BIN", str(Path.home() / ".local/bin/piper"))
 PIPER_VOICE   = os.environ.get("PIPER_VOICE", str(Path.home() / "piper-voices/en_GB-jenny_dioco-medium.onnx"))
@@ -283,25 +283,85 @@ class ChatReq(BaseModel):
 
 @app.post("/chat/stream")
 def chat_stream(req: ChatReq, _=Depends(require_auth)):
-    model       = req.model or DEFAULT_MODEL
+    import subprocess, re as _re
+    from pathlib import Path
+    model = req.model or DEFAULT_MODEL
     persona_key = (req.persona or DEFAULT_PERSONA).lower()
     persona_prompt = PERSONAS.get(persona_key) or PERSONAS[DEFAULT_PERSONA]
-    msgs = [m.model_dump() for m in req.messages if m.role != "system"]
-    payload = {"model": model, "messages": [{"role":"system","content":persona_prompt}]+msgs, "stream": True, "options": {"temperature": 0.7}}
-    def gen():
+    msgs = [m for m in req.messages if m.role != "system"]
+    if not msgs:
+        return StreamingResponse(
+            iter(["event: error\ndata: {\"error\":\"no messages\"}\n\n"]),
+            media_type="text/event-stream")
+    last_msg = msgs[-1].content
+    query = "[System: " + persona_prompt[:300] + "]\n\n" + last_msg
+    HERMES_DIR = Path.home() / "hermes-agent"
+    HERMES_CLI = str(HERMES_DIR / "cli.py")
+    SESSION_FILE = Path.home() / ".hermes" / "matrix_hud_session.json"
+    OPENROUTER_KEY = "OPENROUTER_KEY_HERE"
+    def get_session():
         try:
-            with requests.post(f"{OLLAMA_URL}/api/chat", json=payload, stream=True, timeout=300) as r:
-                r.raise_for_status()
-                for line in r.iter_lines(decode_unicode=True):
-                    if not line: continue
-                    try: obj = json.loads(line)
-                    except: continue
-                    chunk = (obj.get("message") or {}).get("content") or ""
-                    if chunk: yield f"event: token\ndata: {json.dumps({'text':chunk})}\n\n"
-                    if obj.get("done"): yield f"event: done\ndata: {json.dumps({'model':model,'persona':persona_key})}\n\n"; return
+            if SESSION_FILE.exists():
+                return json.loads(SESSION_FILE.read_text()).get("session_id")
+        except:
+            pass
+        return None
+    def save_session(sid):
+        try:
+            SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
+            SESSION_FILE.write_text(json.dumps({"session_id": sid}))
+        except:
+            pass
+    def clean_output(text):
+        text = _re.sub(r"\x1b[^m]*m", "", text)
+        text = _re.sub(r"[\u2500-\u257f]", "", text)
+        skip = _re.compile(r"Initializing agent|Resume this session|Session:|Duration:|Messages:|Query:|^\s*INFO:|hermes --resume")
+        lines = []
+        for line in text.splitlines():
+            s = line.strip()
+            if not s or skip.search(s):
+                continue
+            lines.append(s)
+        return "\n".join(lines)
+    def gen():
+        session_id = get_session()
+        cmd = ["/usr/bin/python3", HERMES_CLI,
+               "--query", query,
+               "--model", "anthropic/claude-sonnet-4",
+               "--provider", "openrouter",
+               "--quiet"]
+        if session_id:
+            cmd.extend(["--resume", session_id])
+        env = dict(os.environ)
+        env["HERMES_QUIET"] = "1"
+        env["OPENROUTER_API_KEY"] = OPENROUTER_KEY
+        env["PYTHONPATH"] = str(HERMES_DIR)
+        try:
+            yield "event: token\ndata: {\"text\":\"\u29d7 Hermes thinking...\"}\n\n"
+            proc = subprocess.Popen(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                cwd=str(HERMES_DIR), env=env, text=True, bufsize=1)
+            full_out = []
+            cleared = False
+            for line in proc.stdout:
+                full_out.append(line)
+                clean = clean_output(line)
+                if not clean:
+                    continue
+                if not cleared:
+                    yield "event: token\ndata: {\"text\":\"\r\"}\n\n"
+                    cleared = True
+                yield "event: token\ndata: " + json.dumps({"text": clean + " "}) + "\n\n"
+            proc.wait()
+            full_text = "".join(full_out)
+            m = _re.search(r"--resume\s+(\S+)", full_text)
+            if m:
+                save_session(m.group(1))
+            yield "event: done\ndata: " + json.dumps({"model": model, "persona": persona_key}) + "\n\n"
         except Exception as e:
-            yield f"event: error\ndata: {json.dumps({'error':str(e)[:300]})}\n\n"
-    return StreamingResponse(gen(), media_type="text/event-stream", headers={"Cache-Control":"no-cache","X-Accel-Buffering":"no"})
+            yield "event: error\ndata: " + json.dumps({"error": str(e)[:300]}) + "\n\n"
+    return StreamingResponse(gen(), media_type="text/event-stream",
+        headers={"Cache-Control":"no-cache","X-Accel-Buffering":"no"})
 
 # ── Vision chat ────────────────────────────────────────────────────────────────
 class VisionReq(BaseModel):
@@ -410,7 +470,78 @@ def run_command(req: RunReq, _=Depends(require_auth)):
     except subprocess.TimeoutExpired: raise HTTPException(408, "timed out")
     except Exception as e: raise HTTPException(500, str(e))
 
+
+# ── Webcam ────────────────────────────────────────────────────────────────────
+@app.get("/webcam/capture")
+def webcam_capture(_=Depends(require_auth)):
+    import cv2, base64, time
+    try:
+        cap = cv2.VideoCapture(0)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        time.sleep(0.5)
+        ret, frame = cap.read()
+        cap.release()
+        if not ret:
+            return {"ok": False, "error": "Webcam capture failed"}
+        _, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
+        b64 = base64.b64encode(buf).decode()
+        return {"ok": True, "image_b64": b64, "width": int(frame.shape[1]), "height": int(frame.shape[0])}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+class WebcamAnalyzeReq(BaseModel):
+    prompt: str = "Describe in detail what you see. Be specific about people, objects, text, colors, and spatial relationships."
+
+@app.post("/webcam/analyze")
+def webcam_analyze(req: WebcamAnalyzeReq, _=Depends(require_auth)):
+    import cv2, base64, time, subprocess, tempfile, re as _re
+    from pathlib import Path
+    OPENROUTER_KEY = "OPENROUTER_KEY_HERE"
+    try:
+        cap = cv2.VideoCapture(0)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        time.sleep(0.5)
+        ret, frame = cap.read()
+        cap.release()
+        if not ret:
+            return {"ok": False, "error": "Webcam capture failed"}
+        tmp = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
+        cv2.imwrite(tmp.name, frame)
+        tmp.close()
+        HERMES_DIR = Path.home() / "hermes-agent"
+        HERMES_CLI = str(HERMES_DIR / "cli.py")
+        SESSION_FILE = Path.home() / ".hermes" / "matrix_hud_session.json"
+        cmd = ["/usr/bin/python3", HERMES_CLI,
+               "--query", req.prompt,
+               "--image", tmp.name,
+               "--model", "anthropic/claude-sonnet-4",
+               "--provider", "openrouter",
+               "--quiet"]
+        try:
+            sid = json.loads(SESSION_FILE.read_text()).get("session_id") if SESSION_FILE.exists() else None
+            if sid: cmd.extend(["--resume", sid])
+        except:
+            pass
+        env = dict(os.environ)
+        env["HERMES_QUIET"] = "1"
+        env["OPENROUTER_API_KEY"] = OPENROUTER_KEY
+        env["PYTHONPATH"] = str(HERMES_DIR)
+        proc = subprocess.run(cmd, capture_output=True, text=True,
+                              cwd=str(HERMES_DIR), env=env, timeout=90)
+        output = proc.stdout
+        output = _re.sub(r"\x1b[^m]*m", "", output)
+        output = _re.sub(r"[\u2500-\u257f]", "", output)
+        skip = _re.compile(r"Initializing agent|Resume this session|Session:|Duration:|Messages:|Query:|^\s*INFO:|hermes --resume")
+        lines = [s.strip() for s in output.splitlines() if s.strip() and not skip.search(s.strip())]
+        clean = " ".join(lines)
+        os.unlink(tmp.name)
+        return {"ok": True, "description": clean}
+    except Exception as e:
+        return {"ok": False, "error": str(e)[:300]}
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("BRIDGE_PORT", "8765"))
-    uvicorn.run("bridge_v2:app", host="0.0.0.0", port=port, log_level="info")
+    uvicorn.run("bridge:app", host="0.0.0.0", port=port, log_level="info")
