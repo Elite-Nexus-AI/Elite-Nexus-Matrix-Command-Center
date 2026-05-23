@@ -345,33 +345,71 @@ def chat_stream(req: ChatReq, _=Depends(require_auth)):
             route = {"provider": "openrouter", "name": "anthropic/claude-sonnet-4"}
         provider = route["provider"]
         model_name = route["name"]
-        if provider == "vllm":
-            cmd = ["/usr/bin/python3", HERMES_CLI,
-                   "--query", query,
-                   "--model", model_name,
-                   "--base_url", "http://localhost:8000/v1",
-                   "--quiet"]
-        elif provider == "ollama":
-            cmd = ["/usr/bin/python3", HERMES_CLI,
-                   "--query", query,
-                   "--model", model_name,
-                   "--base_url", "http://localhost:11434/v1",
-                   "--quiet"]
-        elif provider == "claude_code_cli":
-            cmd = ["claude", "--print", "--no-markdown", query]
-        else:
-            cmd = ["/usr/bin/python3", HERMES_CLI,
-                   "--query", query,
-                   "--model", model_name,
-                   "--provider", "openrouter",
-                   "--skills", "google-workspace",
-                   "--quiet"]
-        if session_id and provider != "claude_code_cli":
-            cmd.extend(["--resume", session_id])
         env = dict(os.environ)
         env["HERMES_QUIET"] = "1"
         env["OPENROUTER_API_KEY"] = OPENROUTER_KEY
         env["PYTHONPATH"] = str(HERMES_DIR)
+        # LOCAL OLLAMA - direct API call (fast, no Hermes overhead)
+        if provider == "ollama":
+            try:
+                payload = {"model": model_name,
+                           "messages": [{"role":"system","content":persona_prompt+no_tts}] + [{"role":m.role,"content":m.content} for m in msgs],
+                           "stream": True, "options": {"temperature": 0.7}}
+                with requests.post(f"{OLLAMA_URL}/api/chat", json=payload, stream=True, timeout=120) as r:
+                    r.raise_for_status()
+                    for line in r.iter_lines(decode_unicode=True):
+                        if not line: continue
+                        try: obj = json.loads(line)
+                        except: continue
+                        chunk = (obj.get("message") or {}).get("content") or ""
+                        if chunk: yield f"event: token\ndata: {json.dumps({'text':chunk})}\n\n"
+                        if obj.get("done"): yield f"event: done\ndata: {json.dumps({'model':model_name,'persona':persona_key})}\n\n"; return
+            except Exception as e:
+                yield f"event: error\ndata: {json.dumps({'error':str(e)[:300]})}\n\n"
+            return
+        # LOCAL vLLM - direct API call (fast)
+        if provider == "vllm":
+            try:
+                payload = {"model": model_name,
+                           "messages": [{"role":"system","content":persona_prompt+no_tts}] + [{"role":m.role,"content":m.content} for m in msgs],
+                           "stream": True, "temperature": 0.7, "max_tokens": 2048}
+                with requests.post("http://localhost:8000/v1/chat/completions", json=payload, stream=True, timeout=120) as r:
+                    r.raise_for_status()
+                    for line in r.iter_lines(decode_unicode=True):
+                        if not line or line == "data: [DONE]": continue
+                        if line.startswith("data: "):
+                            try:
+                                obj = json.loads(line[6:])
+                                chunk = (obj.get("choices",[{}])[0].get("delta") or {}).get("content") or ""
+                                if chunk: yield f"event: token\ndata: {json.dumps({'text':chunk})}\n\n"
+                                if (obj.get("choices",[{}])[0].get("finish_reason")) == "stop":
+                                    yield f"event: done\ndata: {json.dumps({'model':model_name,'persona':persona_key})}\n\n"; return
+                            except: continue
+            except Exception as e:
+                yield f"event: error\ndata: {json.dumps({'error':str(e)[:300]})}\n\n"
+            return
+        # CLAUDE CODE CLI
+        if provider == "claude_code_cli":
+            cmd = ["claude", "--print", "--no-markdown", last_msg]
+            try:
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                        text=True, bufsize=1, env=env)
+                for line in proc.stdout:
+                    if line.strip(): yield f"event: token\ndata: {json.dumps({'text':line})}\n\n"
+                proc.wait()
+                yield f"event: done\ndata: {json.dumps({'model':'claude-code','persona':persona_key})}\n\n"
+            except Exception as e:
+                yield f"event: error\ndata: {json.dumps({'error':str(e)[:300]})}\n\n"
+            return
+        # CLOUD - Hermes CLI with tools
+        cmd = ["/usr/bin/python3", HERMES_CLI,
+               "--query", query,
+               "--model", model_name,
+               "--provider", "openrouter",
+               "--skills", "google-workspace",
+               "--quiet"]
+        if session_id:
+            cmd.extend(["--resume", session_id])
         try:
             yield "event: token\ndata: {\"text\":\"\u29d7 Hermes thinking...\"}\n\n"
             proc = subprocess.Popen(

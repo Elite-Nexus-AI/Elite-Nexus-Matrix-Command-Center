@@ -196,14 +196,13 @@ def select_model(query: str, force_model: Optional[str] = None) -> dict:
         return MODELS["cloud_sonnet"]
 
     # Pure reasoning - try local first
-    if complexity <= 3 and ollama_model_available("qwen3.5:latest"):
-        return MODELS["local_fast"]
-
-    if complexity <= 5 and ollama_model_available("qwen3.5:27b"):
-        return MODELS["local_smart"]
-
-    if complexity <= 7 and vllm_available():
+    # vLLM is primary local - fast and powerful
+    if vllm_available():
         return MODELS["local_72b"]
+
+    # Fall back to Ollama if vLLM not running
+    if ollama_model_available("qwen3.5:27b"):
+        return MODELS["local_smart"]
 
     # Fall back to cloud
     if complexity <= 8:
