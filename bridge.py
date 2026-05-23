@@ -337,13 +337,36 @@ def chat_stream(req: ChatReq, _=Depends(require_auth)):
         return "\n".join(lines)
     def gen():
         session_id = get_session()
-        cmd = ["/usr/bin/python3", HERMES_CLI,
-               "--query", query,
-               "--model", "anthropic/claude-sonnet-4",
-               "--provider", "openrouter",
-               "--skills", "google-workspace",
-               "--quiet"]
-        if session_id:
+        # Smart routing
+        if ROUTER_AVAILABLE:
+            forced = req.model if req.model and req.model != DEFAULT_MODEL else None
+            route = select_model(last_msg, force_model=forced)
+        else:
+            route = {"provider": "openrouter", "name": "anthropic/claude-sonnet-4"}
+        provider = route["provider"]
+        model_name = route["name"]
+        if provider == "vllm":
+            cmd = ["/usr/bin/python3", HERMES_CLI,
+                   "--query", query,
+                   "--model", model_name,
+                   "--base_url", "http://localhost:8000/v1",
+                   "--quiet"]
+        elif provider == "ollama":
+            cmd = ["/usr/bin/python3", HERMES_CLI,
+                   "--query", query,
+                   "--model", model_name,
+                   "--base_url", "http://localhost:11434/v1",
+                   "--quiet"]
+        elif provider == "claude_code_cli":
+            cmd = ["claude", "--print", "--no-markdown", query]
+        else:
+            cmd = ["/usr/bin/python3", HERMES_CLI,
+                   "--query", query,
+                   "--model", model_name,
+                   "--provider", "openrouter",
+                   "--skills", "google-workspace",
+                   "--quiet"]
+        if session_id and provider != "claude_code_cli":
             cmd.extend(["--resume", session_id])
         env = dict(os.environ)
         env["HERMES_QUIET"] = "1"

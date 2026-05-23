@@ -28,7 +28,7 @@ HERMES_CLI = str(HERMES_DIR / "cli.py")
 # Model definitions
 MODELS = {
     "local_fast": {
-        "name": "qwen3.5:latest",
+        "name": "qwen3.5:27b",
         "provider": "ollama",
         "cost_per_1k": 0.0,
         "max_complexity": 3,
@@ -42,7 +42,7 @@ MODELS = {
         "description": "Local 27B - medium reasoning"
     },
     "local_72b": {
-        "name": "Qwen/Qwen2.5-72B-Instruct",
+        "name": "qwen2.5-72b",
         "provider": "vllm",
         "cost_per_1k": 0.0,
         "max_complexity": 7,
@@ -186,7 +186,7 @@ def select_model(query: str, force_model: Optional[str] = None) -> dict:
     use_code = needs_code(query)
 
     # Code generation → Claude Code CLI (MAX, unlimited)
-    if use_code and complexity >= 6:
+    if use_code:
         return MODELS["claude_code"]
 
     # Tool use always needs Claude (local models don't reliably use tools)
