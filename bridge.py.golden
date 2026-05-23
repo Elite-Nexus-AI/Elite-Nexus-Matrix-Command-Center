@@ -305,7 +305,8 @@ def chat_stream(req: ChatReq, _=Depends(require_auth)):
             iter(["event: error\ndata: {\"error\":\"no messages\"}\n\n"]),
             media_type="text/event-stream")
     last_msg = msgs[-1].content
-    query = "[System: " + persona_prompt[:300] + "]\n\n" + last_msg
+    no_tts = " IMPORTANT: Do NOT use text_to_speech, edge-tts, speak, or any TTS tools. Do NOT run mpv or play audio files. The HUD handles all audio output via Piper TTS."
+    query = "[System: " + persona_prompt[:300] + no_tts + "]\n\n" + last_msg
     HERMES_DIR = Path.home() / "hermes-agent"
     HERMES_CLI = str(HERMES_DIR / "cli.py")
     SESSION_FILE = Path.home() / ".hermes" / "matrix_hud_session.json"

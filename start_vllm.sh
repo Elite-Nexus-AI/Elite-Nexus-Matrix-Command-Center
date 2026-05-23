@@ -3,7 +3,7 @@
 # Serves Qwen2.5-72B-Instruct across dual RTX 3090 (48GB combined VRAM)
 # Runs on port 8000 with OpenAI-compatible API
 
-MODEL_PATH="/mnt/data/models/Qwen2.5-72B-Instruct"
+MODEL_PATH="/mnt/data/models/Qwen2.5-72B-Instruct-AWQ"
 LOG_FILE="/tmp/vllm_server.log"
 PORT=8000
 HOST="0.0.0.0"
@@ -41,9 +41,10 @@ nohup python3 -m vllm.entrypoints.openai.api_server \
     --port "$PORT" \
     --tensor-parallel-size 2 \
     --gpu-memory-utilization 0.90 \
-    --max-model-len 32768 \
+    --max-model-len 16384 \
     --served-model-name "qwen2.5-72b" \
     --trust-remote-code \
+    --disable-custom-all-reduce \
     --disable-log-stats \
     > "$LOG_FILE" 2>&1 &
 
