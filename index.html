@@ -210,6 +210,25 @@ body{
 .init-txt{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--cyan);text-shadow:0 0 8px oklch(0.85 0.18 200/0.7);animation:ticking 1.2s steps(2,end) infinite;letter-spacing:.1em;}
 .svg-icon{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .svg-sm{width:12px;height:12px;}
+
+/* Income Factory Dashboard */
+.factory-panel{background:oklch(0.08 0.02 220/0.95);border:1px solid var(--cyan);border-radius:8px;padding:16px;margin:8px 0;}
+.factory-title{color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;}
+.factory-metric{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid oklch(0.3 0.05 220/0.3);}
+.factory-metric:last-child{border-bottom:none;}
+.factory-label{color:oklch(0.7 0.05 220);font-size:11px;}
+.factory-value{color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:700;}
+.factory-value.green{color:oklch(0.8 0.2 142);}
+.factory-value.mag{color:var(--mag);}
+.factory-alpha{border-color:var(--cyan);}
+.factory-beta{border-color:var(--mag);}
+.factory-vs{text-align:center;color:oklch(0.5 0.05 220);font-size:10px;padding:4px;}
+.llm-route-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:10px;font-family:'Share Tech Mono',monospace;}
+.llm-route-badge.local{background:oklch(0.2 0.15 142/0.3);border:1px solid oklch(0.6 0.2 142);color:oklch(0.8 0.2 142);}
+.llm-route-badge.cloud{background:oklch(0.2 0.15 260/0.3);border:1px solid var(--cyan);color:var(--cyan);}
+.briefing-btn{background:oklch(0.15 0.1 220/0.5);border:1px solid var(--cyan);color:var(--cyan);padding:6px 14px;border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px;transition:all 0.2s;}
+.briefing-btn:hover{background:oklch(0.25 0.15 220/0.5);box-shadow:0 0 8px var(--cyan);}
+
 </style>
 </head>
 <body>
@@ -1371,6 +1390,109 @@ init();
       if(btn) btn.style.opacity = "1";
     });
   }
+
+// Income Factory Dashboard
+let factoryData = {
+    alpha: { revenue: 0, sales: 0, products: 0, status: 'IDLE' },
+    beta: { revenue: 0, sales: 0, products: 0, status: 'IDLE' },
+    router: { model: 'initializing...', provider: 'local', complexity: 0 }
+};
+
+async function loadRouterInfo(query) {
+    try {
+        const r = await fetch('/router/info?q=' + encodeURIComponent(query || ''), {
+            headers: { 'Authorization': 'Bearer ' + (typeof getToken === 'function' ? getToken() : '') }
+        });
+        const d = await r.json();
+        if (d.available) {
+            factoryData.router = d;
+            updateRouterBadge(d);
+        }
+    } catch(e) {}
+}
+
+function updateRouterBadge(info) {
+    const badge = document.getElementById('llm-route-badge');
+    if (!badge) return;
+    const isLocal = info.provider === 'ollama' || info.provider === 'vllm';
+    badge.className = 'llm-route-badge ' + (isLocal ? 'local' : 'cloud');
+    const modelShort = (info.model || '').split('/').pop().split(':')[0];
+    badge.textContent = (isLocal ? '⚡ LOCAL' : '☁ CLOUD') + ' · ' + modelShort;
+    const costEl = document.getElementById('llm-cost-indicator');
+    if (costEl) {
+        costEl.textContent = isLocal ? '$0.00/1k (FREE)' : '$' + (info.cost_per_1k || 0).toFixed(4) + '/1k';
+        costEl.style.color = isLocal ? 'oklch(0.8 0.2 142)' : 'var(--mag)';
+    }
+}
+
+async function triggerMorningBriefing() {
+    const btn = document.getElementById('briefing-btn');
+    if (btn) { btn.textContent = 'LOADING...'; btn.disabled = true; }
+    addMsg('system', '🌅 Generating morning briefing...');
+    try {
+        const r = await fetch('/briefing/morning', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const d = await r.json();
+        if (d.ok) {
+            addMsg('ai', d.briefing);
+            if (typeof speakText === 'function') speakText('Morning briefing ready.');
+        } else {
+            addMsg('system', 'Briefing error: ' + d.error);
+        }
+    } catch(e) {
+        addMsg('system', 'Briefing error: ' + e.message);
+    }
+    if (btn) { btn.textContent = 'MORNING BRIEF'; btn.disabled = false; }
+}
+
+function renderFactoryPanel() {
+    const el = document.getElementById('factory-dashboard');
+    if (!el) return;
+    const a = factoryData.alpha;
+    const b = factoryData.beta;
+    el.innerHTML = `
+        <div class="factory-title">⚡ INCOME FACTORY GRID</div>
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:start;">
+            <div class="factory-panel factory-alpha">
+                <div style="color:var(--cyan);font-size:10px;font-family:'Share Tech Mono',monospace;margin-bottom:8px;">FACTORY ALPHA</div>
+                <div class="factory-metric"><span class="factory-label">Revenue</span><span class="factory-value green">$${a.revenue.toFixed(2)}</span></div>
+                <div class="factory-metric"><span class="factory-label">Sales</span><span class="factory-value">${a.sales}</span></div>
+                <div class="factory-metric"><span class="factory-label">Products</span><span class="factory-value">${a.products}</span></div>
+                <div class="factory-metric"><span class="factory-label">Status</span><span class="factory-value" style="font-size:10px;">${a.status}</span></div>
+            </div>
+            <div class="factory-vs">VS</div>
+            <div class="factory-panel factory-beta">
+                <div style="color:var(--mag);font-size:10px;font-family:'Share Tech Mono',monospace;margin-bottom:8px;">FACTORY BETA</div>
+                <div class="factory-metric"><span class="factory-label">Revenue</span><span class="factory-value green">$${b.revenue.toFixed(2)}</span></div>
+                <div class="factory-metric"><span class="factory-label">Sales</span><span class="factory-value">${b.sales}</span></div>
+                <div class="factory-metric"><span class="factory-label">Products</span><span class="factory-value">${b.products}</span></div>
+                <div class="factory-metric"><span class="factory-label">Status</span><span class="factory-value mag" style="font-size:10px;">${b.status}</span></div>
+            </div>
+        </div>
+        <div style="margin-top:12px;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+                <div style="font-size:10px;color:oklch(0.5 0.05 220);margin-bottom:4px;">LLM ROUTER</div>
+                <span id="llm-route-badge" class="llm-route-badge local">⚡ LOCAL · qwen</span>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:10px;color:oklch(0.5 0.05 220);margin-bottom:4px;">COST/1K TOKENS</div>
+                <span id="llm-cost-indicator" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:oklch(0.8 0.2 142);">$0.00/1k (FREE)</span>
+            </div>
+        </div>
+        <div style="margin-top:10px;text-align:center;">
+            <button class="briefing-btn" id="briefing-btn" onclick="triggerMorningBriefing()">🌅 MORNING BRIEF</button>
+        </div>
+    `;
+}
+
+// Initialize factory dashboard on load
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(renderFactoryPanel, 2000);
+    setInterval(renderFactoryPanel, 30000);
+});
+
 </script>
 </body>
 </html>

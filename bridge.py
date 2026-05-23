@@ -25,6 +25,17 @@ import asyncio, base64, io, json, os, re, subprocess, tempfile, time, wave
 from pathlib import Path
 from typing import Any
 import psutil, requests
+
+# Smart LLM Router
+ROUTER_AVAILABLE = False
+try:
+    import sys as _sys_r, os as _os_r
+    _sys_r.path.insert(0, _os_r.path.dirname(_os_r.path.abspath(__file__)))
+    from llm_router import select_model, get_routing_info, score_complexity, needs_tools
+    ROUTER_AVAILABLE = True
+except Exception:
+    pass
+
 from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse, FileResponse
@@ -542,6 +553,74 @@ def webcam_analyze(req: WebcamAnalyzeReq, _=Depends(require_auth)):
         return {"ok": True, "description": clean}
     except Exception as e:
         return {"ok": False, "error": str(e)[:300]}
+
+
+# ── LLM Router Info ────────────────────────────────────────────────────────────
+@app.get("/router/info")
+def router_info(q: str = "", _=Depends(require_auth)):
+    if not ROUTER_AVAILABLE:
+        return {"available": False}
+    info = get_routing_info(q) if q else {"available": True}
+    info["available"] = True
+    return info
+
+@app.get("/router/models")
+def router_models(_=Depends(require_auth)):
+    from llm_router import MODELS, vllm_available, ollama_model_available
+    status = {}
+    for key, m in MODELS.items():
+        available = False
+        if m["provider"] == "ollama":
+            available = ollama_model_available(m["name"])
+        elif m["provider"] == "vllm":
+            available = vllm_available()
+        elif m["provider"] in ("openrouter", "claude_code_cli"):
+            available = True
+        status[key] = {**m, "available": available}
+    return status
+
+
+# ── Morning Briefing ───────────────────────────────────────────────────────────
+@app.post("/briefing/morning")
+def morning_briefing_endpoint(_=Depends(require_auth)):
+    import subprocess, re as _re
+    from pathlib import Path
+    from datetime import datetime
+    HERMES_DIR = Path.home() / "hermes-agent"
+    HERMES_CLI = str(HERMES_DIR / "cli.py")
+    OPENROUTER_KEY_MB = os.environ.get("OPENROUTER_API_KEY", "")
+    now = datetime.now()
+    query = (
+        f"Good morning! Today is {now.strftime('%A, %B %d, %Y')} at {now.strftime('%I:%M %p')}. "
+        f"Please give me a morning briefing: "
+        f"1) Check my Gmail for any urgent or important unread emails (last 24h) "
+        f"2) Check my Google Calendar for today's events and upcoming appointments this week "
+        f"3) Give me a motivational productivity note for the day. "
+        f"Keep it concise and actionable. Format it clearly."
+    )
+    cmd = ["/usr/bin/python3", HERMES_CLI,
+           "--query", query,
+           "--model", "anthropic/claude-sonnet-4",
+           "--provider", "openrouter",
+           "--skills", "google-workspace",
+           "--quiet"]
+    env = dict(os.environ)
+    env["HERMES_QUIET"] = "1"
+    env["OPENROUTER_API_KEY"] = OPENROUTER_KEY_MB
+    env["PYTHONPATH"] = str(HERMES_DIR)
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True,
+                              cwd=str(HERMES_DIR), env=env, timeout=120)
+        output = proc.stdout
+        output = _re.sub(r"\x1b[^m]*m", "", output)
+        output = _re.sub(r"[\u2500-\u257f]", "", output)
+        skip = _re.compile(r"Initializing agent|Resume this session|Session:|Duration:|Messages:|Query:|^\s*INFO:|hermes --resume")
+        lines = [s.strip() for s in output.splitlines() if s.strip() and not skip.search(s.strip())]
+        clean = " ".join(lines)
+        return {"ok": True, "briefing": clean}
+    except Exception as e:
+        return {"ok": False, "error": str(e)[:300]}
+
 
 if __name__ == "__main__":
     import uvicorn
