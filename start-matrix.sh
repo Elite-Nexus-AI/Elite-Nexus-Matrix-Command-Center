@@ -55,3 +55,8 @@ wait $BRIDGE_PID
 sleep 3
 pactl set-default-source alsa_input.usb-ZIMHOME_ZTD39_Device_20250915A-00.mono-fallback 2>/dev/null || true
 wpctl set-default 54 2>/dev/null || true
+
+# Start vLLM (Qwen2.5-72B AWQ)
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+sudo docker stop $(sudo docker ps -q --filter 'publish=8880') 2>/dev/null
+bash $DIR/start_vllm.sh &
