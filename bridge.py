@@ -305,7 +305,7 @@ def chat_stream(req: ChatReq, _=Depends(require_auth)):
             iter(["event: error\ndata: {\"error\":\"no messages\"}\n\n"]),
             media_type="text/event-stream")
     last_msg = msgs[-1].content
-    no_tts = " IMPORTANT: Do NOT use text_to_speech, edge-tts, speak, or any TTS tools. Do NOT run mpv or play audio files. The HUD handles all audio output via Piper TTS."
+    no_tts = " IMPORTANT: Do NOT use text_to_speech, edge-tts, speak, or any TTS tools. Do NOT run mpv or play audio files. The HUD handles all audio output via Piper TTS. When opening URLs in browser always use the EXACT URL requested - never substitute or redirect to a different site. Use xdg-open for browser navigation."
     query = "[System: " + persona_prompt[:300] + no_tts + "]\n\n" + last_msg
     HERMES_DIR = Path.home() / "hermes-agent"
     HERMES_CLI = str(HERMES_DIR / "cli.py")
@@ -349,6 +349,8 @@ def chat_stream(req: ChatReq, _=Depends(require_auth)):
         env["HERMES_QUIET"] = "1"
         env["OPENROUTER_API_KEY"] = OPENROUTER_KEY
         env["PYTHONPATH"] = str(HERMES_DIR)
+        env["DISPLAY"] = ":0"
+        env["DBUS_SESSION_BUS_ADDRESS"] = os.environ.get("DBUS_SESSION_BUS_ADDRESS", "unix:path=/run/user/1000/bus")
         # LOCAL OLLAMA - direct API call (fast, no Hermes overhead)
         if provider == "ollama":
             try:

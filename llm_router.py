@@ -96,7 +96,7 @@ COMPLEXITY_SIGNALS = {
 # Tool use requirements
 TOOL_SIGNALS = [
     "email", "gmail", "calendar", "drive", "file", "terminal",
-    "search", "web", "look at", "webcam", "read", "write",
+    "search", "web", "look at", "find", "youtube", "url", "website", "google", "online", "browse", "pull up", "webcam", "read", "write",
     "run", "execute", "install", "download"
 ]
 
@@ -196,12 +196,12 @@ def select_model(query: str, force_model: Optional[str] = None) -> dict:
         return MODELS["cloud_sonnet"]
 
     # Pure reasoning - try local first
-    # vLLM is primary local - fast and powerful
-    if vllm_available():
+    # vLLM for pure reasoning/conversation (no tools needed)
+    if vllm_available() and not use_tools:
         return MODELS["local_72b"]
 
-    # Fall back to Ollama if vLLM not running
-    if ollama_model_available("qwen3.5:27b"):
+    # Fall back to Ollama if vLLM not running and no tools needed
+    if ollama_model_available("qwen3.5:27b") and not use_tools:
         return MODELS["local_smart"]
 
     # Fall back to cloud
