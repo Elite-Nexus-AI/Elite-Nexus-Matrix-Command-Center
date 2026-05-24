@@ -1096,6 +1096,10 @@ async function runSlash(cmd){
       catch(e){addMsg('system','Run failed: '+e.message);}
       return true;
     case 'agent': openModal('agent-modal'); return true;
+    case 'playlist': case 'play':
+      var _plArg = arg.toLowerCase().trim() || 'liked';
+      fetch('/youtube/open',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:_plArg})}).then(function(r){return r.json();}).then(function(d){if(d.ok){addMsg('system','Playing: '+d.opened);}else{addMsg('system','Not found. Available: '+d.available.join(', '));}});
+      return true;
     case 'look': case 'webcam': case 'camera':
       addMsg('user', '/look');
       clearInput();
