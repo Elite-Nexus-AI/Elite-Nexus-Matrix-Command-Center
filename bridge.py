@@ -686,6 +686,42 @@ def morning_briefing_endpoint(_=Depends(require_auth)):
         return {"ok": False, "error": str(e)[:300]}
 
 
+
+# ── YouTube Playlists ──────────────────────────────────────────────────────────
+YOUTUBE_PLAYLISTS = {
+    'elite nexus': 'https://www.youtube.com/watch?v=r13L1YJ3sts&list=PLDokTh_uT5E3e4l1Sk4mQzwM2aUMOSyLi',
+    'nexus': 'https://www.youtube.com/watch?v=r13L1YJ3sts&list=PLDokTh_uT5E3e4l1Sk4mQzwM2aUMOSyLi',
+    'watch later': 'https://www.youtube.com/watch?v=ntvkDnk_5jA&list=WL',
+    'wl': 'https://www.youtube.com/watch?v=ntvkDnk_5jA&list=WL',
+    'liked': 'https://www.youtube.com/watch?v=za6sYoYE29I&list=LL',
+    'liked videos': 'https://www.youtube.com/watch?v=za6sYoYE29I&list=LL',
+    'll': 'https://www.youtube.com/watch?v=za6sYoYE29I&list=LL',
+}
+
+@app.get("/youtube/playlists")
+def youtube_playlists(_=Depends(require_auth)):
+    return YOUTUBE_PLAYLISTS
+
+@app.post("/youtube/open")
+def youtube_open(req: dict, _=Depends(require_auth)):
+    import subprocess
+    name = (req.get("name") or "").lower().strip()
+    url = YOUTUBE_PLAYLISTS.get(name)
+    if not url:
+        # fuzzy match
+        for key in YOUTUBE_PLAYLISTS:
+            if key in name or name in key:
+                url = YOUTUBE_PLAYLISTS[key]
+                break
+    if url:
+        env = dict(os.environ)
+        env["DISPLAY"] = ":0"
+        env["DBUS_SESSION_BUS_ADDRESS"] = os.environ.get("DBUS_SESSION_BUS_ADDRESS", "unix:path=/run/user/1000/bus")
+        subprocess.Popen(["xdg-open", url], env=env)
+        return {"ok": True, "opened": url}
+    return {"ok": False, "error": f"Playlist not found: {name}", "available": list(YOUTUBE_PLAYLISTS.keys())}
+
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("BRIDGE_PORT", "8765"))
