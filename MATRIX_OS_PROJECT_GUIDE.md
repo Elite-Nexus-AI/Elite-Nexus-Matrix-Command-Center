@@ -1,408 +1,406 @@
-# ELITE NEXUS AI — MATRIX OS PROJECT GUIDE
-> Last Updated: May 23, 2026
-> Status: Active Development
+# ELITE NEXUS AI — MATRIX OS MASTER PROJECT GUIDE v3
+> Last Updated: May 25, 2026
 > Repo: https://github.com/Elite-Nexus-AI/Elite-Nexus-Matrix-Command-Center
+> Revenue Target: $10,000–$20,000/month autonomous factories
+> Status: Phase 0 Complete — Phase 1 Next
 
 ---
 
-## ✅ ALREADY BUILT (DO NOT REBUILD)
-
-- Matrix HUD shell — cyberpunk interface, live at localhost:8765
-- Hermes Agent + Claude Sonnet 4 via OpenRouter — full tool use
-- Smart LLM Router — 6-tier model selection (vLLM → Ollama → Claude → Opus)
-- vLLM — Qwen2.5-72B AWQ running across dual RTX 3090 (free local 72B)
-- Gmail / Calendar / Drive / YouTube — Google Workspace fully authenticated
-- Webcam vision — 📷 button in HUD
-- Morning Briefing — real Gmail + Calendar via /briefing/morning endpoint
-- Piper TTS — single Jenny Dioco British voice, no edge-tts
-- Browser control — xdg-open via Hermes terminal tool
-- YouTube playlist launcher — /playlist command + lookup table
-- Watchdog — bridge auto-restarts if it dies
-- Llama 3.1 70B — downloading to /mnt/data/models/
-- GitHub repo — clean, no secrets
+## SYSTEM SPECS
+- OS: Zorin OS 18 (Ubuntu base) · Username: matrix
+- CPU: Intel Core i9
+- GPU: 2× NVIDIA RTX 3090 (48GB combined VRAM)
+- RAM: 128GB · Storage: 250GB OS SSD + 8TB Data SSD (/mnt/data)
 
 ---
 
-## 📋 REMAINING BUILD LIST — BITE-SIZE SESSIONS
-
----
-
-### 🔴 SESSION 1 — Financial Telemetry Footer
-**Time Estimate: 1-2 hours**
-**What it does:** Shows real-time cost of every conversation in the HUD
-
-Tasks:
-- [ ] Add cost footer bar to HUD below chat window
-- [ ] Track which model is being used per message (from router)
-- [ ] Display: model name | tokens used | cost ($0.00 local / $X.XX cloud)
-- [ ] Running daily total — red for paid, green for free local
-- [ ] Hard limit warning — TTS alert when daily spend hits $X
-- [ ] Session savings calculator (what vLLM saved vs OpenRouter)
-
-Files to edit: `index.html`, `bridge.py`
-New endpoint: `GET /telemetry/session`
-
----
-
-### 🔴 SESSION 2 — Task Scaffolding UI (Orchestration Panel)
-**Time Estimate: 2-3 hours**
-**What it does:** Structured project entry — tell Matrix what to build
-
-Tasks:
-- [ ] Add "NEW PROJECT" button to HUD
-- [ ] Modal with fields:
-  - Task Type dropdown: Website Design, App Design, Agent Design, Super Agent, Chatbot, Voice Bot, Workflow
-  - Project Name (text)
-  - Brief Description (text)
-  - In-Depth Description (textarea)
-  - Tool Assignment: Auto or Manual (n8n, Dify, Next.js, FastAPI)
-  - Build Preferences (text)
-- [ ] Submit → sends structured prompt to Hermes CEO orchestrator
-- [ ] Hermes generates project `.md` file to `/mnt/data/Matrix-Production/projects/`
-- [ ] Show project in vault panel
-
-Files to edit: `index.html`, `bridge.py`
-New endpoint: `POST /projects/create`
-
----
-
-### 🔴 SESSION 3 — Income Factory Dashboard (Real Data)
-**Time Estimate: 2-3 hours**
-**What it does:** Live Alpha vs Beta factory leaderboard in HUD
-
-Tasks:
-- [ ] Wire Factory Alpha + Beta panels to real SQLite data
-- [ ] CFO Agent market feed — pulls trending products via web search
-- [ ] Asset gallery carousel — shows latest generated assets
-- [ ] Financial health meter — progress bar toward $5k/month goal
-- [ ] Factory status: IDLE / RUNNING / PUBLISHING / ERROR
-- [ ] Competitive reward status — winner badge
-- [ ] Auto-refresh every 60 seconds
-
-Files to edit: `index.html`, `bridge.py`
-New: `factory_state.db`, `/mnt/data/ai_factory/` structure
-
----
-
-### 🟡 SESSION 4 — Obsidian Bi-Directional Sync
-**Time Estimate: 1-2 hours**
-**What it does:** Matrix reads/writes your Obsidian vaults
-
-Tasks:
-- [ ] Scan vault at `/mnt/data/New-matrix-vault/` and `/mnt/data/Matrix-Production/`
-- [ ] Display vault notes in HUD vault panel (already partially built)
-- [ ] Agent generates daily summary note automatically
-- [ ] Agent links unlinked mentions in vault
-- [ ] New endpoint: `POST /vault/write` — write note from HUD
-- [ ] New endpoint: `GET /vault/search` — semantic search in vault
-- [ ] Wire to morning briefing — include relevant vault notes
-
-Files to edit: `bridge.py`, `index.html`
-New endpoints: `/vault/write`, `/vault/search`, `/vault/daily-summary`
-
----
-
-### 🟡 SESSION 5 — CEO Orchestrator + Department Heads
-**Time Estimate: 3-4 hours**
-**What it does:** Matrix becomes a multi-agent CEO with departments
-
-Tasks:
-- [ ] Define 5 department head personas in Hermes config:
-  - Product Development Head
-  - Client Services & Consulting Head
-  - Marketing & Growth Head
-  - Cybersecurity & Compliance Head
-  - CFO Agent (market analysis + factory management)
-- [ ] CEO routing logic — analyzes task, assigns to correct department
-- [ ] Each head spawns 3-5 sub-agents for parallel execution
-- [ ] Sub-agent results reconstructed by department manager
-- [ ] Add Tattletale Agent — monitors + reports underperformers
-- [ ] Add Teacher Agent — maintains Obsidian knowledge bases
-- [ ] Agent Commander panel wired to real spawning
-
-Files to edit: `bridge.py`, `index.html`
-New: `~/.hermes/department_heads/` persona configs
-
----
-
-### 🟡 SESSION 6 — Wake Word + Global Hotkey
-**Time Estimate: 1-2 hours**
-**What it does:** Say "Hermes" or press hotkey to activate HUD anywhere
-
-Tasks:
-- [ ] Always-on Whisper listener for wake word "Hermes" or "Matrix"
-- [ ] System-wide hotkey (e.g., Ctrl+Space) to focus HUD
-- [ ] Auto-capture clipboard content when HUD is summoned
-- [ ] Auto-capture active window title for context
-- [ ] Feed context to Hermes automatically
-- [ ] Add to autostart
-
-New: `wake_word_listener.py`, systemd service
-
----
-
-### 🟠 SESSION 7 — Factory 1: Identity POD Store
-**Time Estimate: 4-6 hours**
-**What it does:** Autonomous print-on-demand product generation
-
-Tasks:
-- [ ] Trend scraper — scrape Etsy/Pinterest/TikTok for niche trends
-- [ ] SDXL/Flux prompt generator from trend data
-- [ ] Image generation pipeline (local GPU)
-- [ ] Real-ESRGAN upscaler to 300 DPI
-- [ ] Printify API integration — upload as draft
-- [ ] Auto-generate title, tags, description via LLM
-- [ ] Log to `factory_state.db`
-- [ ] Draft enforcement — never auto-publish
-
-New: `/mnt/data/ai_factory/factories/factory_1_pod/`
-
----
-
-### 🟠 SESSION 8 — Factory 2: Stream Asset Factory
-**Time Estimate: 4-6 hours**
-**What it does:** Automated stream overlay + Discord emote generation
-
-Tasks:
-- [ ] Niche research — Twitch/YouTube trending aesthetics
-- [ ] SDXL overlay frame generation (alpha-transparent PNG)
-- [ ] Stable Video Diffusion for animated overlays (4K MP4)
-- [ ] Gumroad API — upload as draft listing
-- [ ] Etsy API — upload as draft listing
-- [ ] Auto-title + tags + description
-- [ ] Log to factory state
-
-New: `/mnt/data/ai_factory/factories/factory_2_stream/`
-
----
-
-### 🟠 SESSION 9 — Factory 3+4+5 (Digital Press, Dev Lab, Vector House)
-**Time Estimate: 6-8 hours**
-**What it does:** Three more autonomous product factories
-
-Factory 3 — Gothic Digital Press:
-- [ ] Digital planner PDF generation (hyperlinked, iPad-ready)
-- [ ] Gallery wall art packs (dark botanical, parchment textures)
-- [ ] Etsy + Gumroad draft upload
-
-Factory 4 — Developer Utility Lab:
-- [ ] Notion workspace templates (JSON schema)
-- [ ] LLM prompt workbooks (markdown)
-- [ ] Gumroad + Notion Template Gallery upload
-
-Factory 5 — Vector Crafting House:
-- [ ] SVG generation via potrace pipeline
-- [ ] Cyber-Occult geometry patterns
-- [ ] Creative Market + Etsy draft upload
-
----
-
-### 🔵 SESSION 10 — Iris Vault (PostgreSQL + pgvector)
-**Time Estimate: 3-4 hours**
-**What it does:** Local database for unlimited memory + cost ledger
-
-Tasks:
-- [ ] Spin up PostgreSQL + pgvector in Docker
-- [ ] Create TokenLedger table (model, tokens, cost, timestamp)
-- [ ] Create SecurityAuditLog table (action, category, user_approved)
-- [ ] Create ProjectMemory table (project_id, context, blueprint)
-- [ ] Wire bridge to log all LLM calls to TokenLedger
-- [ ] Connect to financial telemetry footer
-- [ ] RAG search over Obsidian vault content
-
-New: `docker-compose-iris.yml`, `iris_vault.py`
-
----
-
-### 🔵 SESSION 11 — Zero-Trust Security Matrix
-**Time Estimate: 3-4 hours**
-**What it does:** Traffic light permission system for agent actions
-
-Tasks:
-- [ ] Categorize all agent actions: Green / Yellow / Red
-- [ ] Green → auto-proceed (reads, calculations)
-- [ ] Yellow → notify in HUD, proceed after 3 seconds
-- [ ] Red → HITL interrupt — approval button appears in HUD
-- [ ] Git snapshot before every Red action
-- [ ] One-click rollback from HUD
-- [ ] Log all actions to SecurityAuditLog in Iris Vault
-- [ ] Plain-English audit timeline panel in HUD
-
-Files to edit: `bridge.py`, `index.html`
-
----
-
-### 🔵 SESSION 12 — Semantic Screen Awareness
-**Time Estimate: 2-3 hours**
-**What it does:** Matrix sees your screen without you telling her
-
-Tasks:
-- [ ] OCR running on active window (Tesseract or EasyOCR)
-- [ ] Screenshot → text every 30 seconds
-- [ ] Feed relevant context to Hermes automatically
-- [ ] Contextual Awareness Dashboard panel in HUD
-- [ ] Shows: active window, clipboard, relevant Obsidian notes
-- [ ] Matrix proactively comments on what she sees
-
-New: `screen_awareness.py`, systemd timer
-
----
-
-### 🔵 SESSION 13 — n8n + Dify Docker Sandbox
-**Time Estimate: 2-3 hours**
-**What it does:** Local workflow builder + RAG system
-
-Tasks:
-- [ ] Spin up n8n in Docker (port 5678)
-- [ ] Spin up Dify in Docker (port 3000)
-- [ ] Hermes can create n8n workflows via API
-- [ ] Hermes can create Dify knowledge bases via API
-- [ ] Visual server rack representation in HUD
-
-New: `docker-compose-sandbox.yml`
-
----
-
-### 🔵 SESSION 14 — Idle Dreaming Mode
-**Time Estimate: 3-4 hours**
-**What it does:** Matrix self-improves while you're away
-
-Tasks:
-- [ ] Detect user idle (no input for 15+ minutes)
-- [ ] Trigger Dreaming mode — subtle HUD animation
-- [ ] Hermes simulates complex builds in latent space
-- [ ] Zero token cost — uses local vLLM only
-- [ ] New skills logged to Recursive Skill Ledger
-- [ ] Skill Ledger panel in HUD — inspectable, clickable entries
-- [ ] Natural language skill creation: "teach yourself X"
-- [ ] Morning briefing includes overnight dream summary
-
-New: `dream_engine.py`, skill ledger SQLite
-
----
-
-### 🔵 SESSION 15 — Tauri Desktop App Wrapper
-**Time Estimate: 4-6 hours**
-**What it does:** Turns HUD into native desktop app
-
-Tasks:
-- [ ] Init Tauri 2.0 project wrapping current HTML/JS
-- [ ] Configure transparent click-through overlay
-- [ ] tRPC for frontend/Rust communication
-- [ ] Rust Resource Governor — throttle HUD during heavy inference
-- [ ] Predictive resource allocation
-- [ ] sysinfo Rust bindings for OS metrics
-- [ ] enigo for system automation
-- [ ] Rust keyring for encrypted credential storage
-- [ ] Replace config.sh secrets with keyring
-
-New: `src-tauri/` directory, full Rust backend
-
----
-
-### 🔵 SESSION 16 — Virtual Agent Office (3D)
-**Time Estimate: 6-8 hours**
-**What it does:** 3D office where you see agents working
-
-Tasks:
-- [ ] React Three Fiber 3D environment
-- [ ] Drag-and-drop office layout (desks, server racks, decorations)
-- [ ] 3D avatars for Hermes, Claude, department heads
-- [ ] Avatars animate with agent execution states
-- [ ] Server racks pulse when Docker containers active
-- [ ] Holographic factory production line view
-- [ ] Dynamic avatar spawning for new sub-agents
-- [ ] Skill Store UI — browse/install skills
-
-New: Full 3D React component, replaces current vault panel
-
----
-
-## 🗺️ RECOMMENDED BUILD ORDER
-
-```
-Session 1  → Financial Telemetry Footer      (quick win, visible)
-Session 2  → Task Scaffolding UI             (core UX upgrade)
-Session 3  → Income Factory Dashboard        (money engine)
-Session 4  → Obsidian Sync                   (knowledge base)
-Session 5  → CEO Orchestrator + Departments  (agent brain)
-Session 6  → Wake Word + Hotkey              (UX polish)
-Session 7  → Factory 1 POD                  (revenue)
-Session 8  → Factory 2 Stream Assets        (revenue)
-Session 9  → Factory 3+4+5                  (revenue)
-Session 10 → Iris Vault Database             (foundation)
-Session 11 → Security Matrix                 (safety)
-Session 12 → Screen Awareness               (intelligence)
-Session 13 → n8n + Dify Sandbox             (builder tools)
-Session 14 → Idle Dreaming                  (self-improvement)
-Session 15 → Tauri Desktop App              (production)
-Session 16 → Virtual Agent Office 3D        (showcase)
-```
-
----
-
-## 📁 PROJECT FILE STRUCTURE
-
-```
-~/Downloads/files/matrix-hud-perfect/
-├── bridge.py              ← FastAPI backend (main server)
-├── index.html             ← Matrix HUD frontend
-├── llm_router.py          ← Smart LLM routing logic
-├── start_vllm.sh          ← Launch Qwen2.5-72B on dual 3090
-├── start-matrix.sh        ← Full system startup
-├── config.sh              ← API keys + env vars (gitignored)
-├── watchdog.sh            ← Bridge auto-restart
-├── bridge.py.golden       ← Last known good backup
-├── index.html.golden      ← Last known good backup
-
-/mnt/data/
-├── models/
-│   ├── Qwen2.5-72B-Instruct-AWQ/   ← Primary vLLM model (39GB)
-│   ├── Qwen2.5-72B-Instruct/        ← Full precision (136GB)
-│   └── Llama-3.1-70B-Instruct/     ← Downloading...
-├── ai_factory/                      ← Factory engine (Session 3+)
-│   ├── core_orchestrator.sh
-│   ├── factory_state.db
-│   ├── shared_modules/
-│   └── factories/
-├── Matrix-Production/               ← Obsidian vault (production)
-└── New-matrix-vault/                ← Obsidian vault (notes)
-```
-
----
-
-## 🔑 KEY CREDENTIALS & SERVICES
-
-| Service | Status | Notes |
-|---------|--------|-------|
-| OpenRouter API | ✅ Active | Key in config.sh |
-| Claude Code MAX | ✅ Active | info@elitenexusai.com |
-| Google Workspace | ✅ Authenticated | Gmail, Calendar, Drive, YouTube |
-| HuggingFace | ✅ Active | Matrix-Hermes token |
-| vLLM | ✅ Running | Port 8000, Qwen2.5-72B AWQ |
-| Ollama | ✅ Running | Port 11434, qwen3.5:27b |
-| Matrix Bridge | ✅ Running | Port 8765 |
-| Piper TTS | ✅ Active | Jenny Dioco British voice |
-
----
-
-## ⚡ QUICK START (After Reboot)
-
+## ✅ PHASE 0 — FACTUALLY BUILT AND CONFIRMED WORKING
+
+| Component | Status | Location |
+|-----------|--------|----------|
+| Matrix HUD | ✅ LIVE | localhost:8765 · index.html + bridge.py |
+| Hermes Agent + Claude Sonnet 4 | ✅ LIVE | ~/hermes-agent/cli.py · OpenRouter |
+| Smart LLM Router | ✅ LIVE | llm_router.py · 6-tier routing |
+| vLLM Qwen2.5-72B AWQ | ✅ LIVE | /mnt/data/models/Qwen2.5-72B-Instruct-AWQ |
+| Google Workspace Auth | ✅ LIVE | ~/.hermes/google_token.json |
+| Gmail / Calendar / Drive | ✅ LIVE | Hermes google-workspace skill |
+| YouTube readonly scope | ✅ LIVE | Added this session |
+| Morning Briefing | ✅ LIVE | POST /briefing/morning |
+| Webcam Vision | ✅ LIVE | GET /webcam/capture + POST /webcam/analyze |
+| Piper TTS (Jenny Dioco) | ✅ LIVE | en_GB-jenny_dioco-medium.onnx |
+| Edge-TTS disabled | ✅ FIXED | no_tts instruction in persona system prompt |
+| Browser control | ✅ LIVE | xdg-open + DISPLAY/DBUS env vars |
+| YouTube Playlist Launcher | ✅ LIVE | /playlist command + lookup table |
+| Watchdog auto-restart | ✅ LIVE | /tmp/watchdog.sh |
+| GitHub repo | ✅ LIVE | github.com/Elite-Nexus-AI/Elite-Nexus-Matrix-Command-Center |
+| Direct API routing (vLLM/Ollama) | ✅ LIVE | No Hermes CLI for local models |
+| Llama 3.1 70B | ⏳ DOWNLOADING | /mnt/data/models/Llama-3.1-70B-Instruct/ |
+
+### Vault Paths
+- Daily notes / knowledge: /mnt/data/New-matrix-vault/
+- Production / projects: /mnt/data/Matrix-Production/
+
+### Quick Start After Reboot
 ```bash
-cd ~/Downloads/files/matrix-hud-perfect
-source config.sh
-# Stop Kokoro Docker (frees GPU 0 VRAM)
+cd ~/Downloads/files/matrix-hud-perfect && source config.sh
 sudo docker stop $(sudo docker ps -q --filter "publish=8880") 2>/dev/null
-# Start vLLM (72B local model)
+sudo systemctl stop ollama
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 bash start_vllm.sh &
-# Start bridge
+# After ~2 min when vLLM loads:
+sudo systemctl start ollama
 source .venv/bin/activate
 python3 bridge.py >> /tmp/matrix-bridge.log 2>&1 &
-# Open HUD
 xdg-open http://localhost:8765
 ```
 
 ---
 
-*This document is the master project guide for Elite Nexus AI Matrix OS.*
-*Update this file after completing each session.*
+## 🏢 ELITE NEXUS AI SERVICES & DEPARTMENT HEAD MAP
+
+Each service line has one Department Head Agent with up to 10 sub-agents working under them.
+Department Heads use local vLLM (free) for sub-tasks and only escalate to Claude when needed.
+
+### SERVICE 1 — Smart AI Websites
+**Department Head:** WEBSITE ARCHITECT
+Sub-agents (up to 10): UI/UX Designer, Frontend Dev, Backend Dev, SEO Optimizer,
+  Content Writer, Performance Analyst, CMS Integrator, Animation Specialist, QA Tester, DevOps
+Responsibilities: Design and build adaptive AI-powered websites, landing pages, portfolio sites
+Tools: Claude Code, Next.js, Tailwind, Framer Motion, Vercel deployment
+Vault: /Matrix-Production/projects/websites/
+
+### SERVICE 2 — AI Chatbots
+**Department Head:** CHATBOT ENGINEER
+Sub-agents (up to 10): Conversation Designer, Training Data Specialist, Integration Dev,
+  Persona Writer, Flow Architect, QA Tester, Analytics Agent, CRM Connector, Escalation Handler, Deployment
+Responsibilities: Design, train, and deploy AI chatbots for client websites
+Tools: Dify, n8n, Hermes, OpenRouter, RAG pipelines
+Vault: /Matrix-Production/projects/chatbots/
+
+### SERVICE 3 — Voice Bots & IVR Systems
+**Department Head:** VOICE SYSTEMS ENGINEER
+Sub-agents (up to 10): Script Writer, Voice Persona Designer, SIP/VoIP Integrator,
+  Call Flow Architect, VAPI/Retell Connector, Twilio Dev, QA Tester, Analytics, Escalation, Deployment
+Responsibilities: Build outbound/inbound voice agents, IVR phone systems, telephony automation
+Tools: VAPI, Retell, Twilio, Piper TTS, Whisper STT, SIP protocol
+Vault: /Matrix-Production/projects/voicebots/
+
+### SERVICE 4 — AI Agents & Super Agents
+**Department Head:** AGENT ARCHITECT
+Sub-agents (up to 10): Tool Specialist, Memory Systems Dev, Orchestration Designer,
+  API Connector, Context Manager, Performance Monitor, Security Auditor, Test Runner, Documenter, Deployer
+Responsibilities: Design and deploy single AI agents and Super Agent clusters (cognitive clusters)
+Tools: LangGraph, Hermes, Claude Code, MCP plugins, vLLM
+Vault: /Matrix-Production/projects/agents/
+
+### SERVICE 5 — AI Workflows & Automation
+**Department Head:** AUTOMATION ENGINEER
+Sub-agents (up to 10): Process Mapper, n8n Builder, Dify Pipeline Dev,
+  API Integrator, Data Transformer, Scheduler, Error Handler, Documentation Writer, QA, Deployer
+Responsibilities: Build end-to-end autonomous workflow systems for business automation
+Tools: n8n, Dify, Claude Code, Python, REST APIs
+Vault: /Matrix-Production/projects/workflows/
+
+### SERVICE 6 — AI Consulting & ROI Reporting
+**Department Head:** AI CONSULTANT
+Sub-agents (up to 10): Business Analyst, ROI Calculator, Research Agent,
+  Report Writer, Presentation Builder, Data Visualizer, Strategy Agent, Competitor Analyst, Market Researcher, Client Liaison
+Responsibilities: Analyze client businesses, identify AI opportunities, produce ROI reports
+Tools: Web search, Claude Sonnet 4, Hermes, Google Sheets, Drive
+Vault: /Matrix-Production/projects/consulting/
+
+### SERVICE 7 — Marketing & Social Media
+**Department Head:** MARKETING HEAD
+Sub-agents (up to 10): Content Strategist, Copywriter, Social Media Manager,
+  SEO Specialist, Ad Campaign Builder, Trend Researcher, Brand Voice Agent, Video Script Writer, Analytics, Scheduler
+Responsibilities: Social media campaigns, content creation, marketing automation
+Tools: Web search, CFO Agent trend data, Claude, image generation
+Vault: /Matrix-Production/projects/marketing/
+
+### SERVICE 8 — Cybersecurity & Compliance (Shield)
+**Department Head:** SECURITY HEAD
+Sub-agents (up to 10): Vulnerability Scanner, Compliance Checker, Audit Logger,
+  Threat Analyst, Access Controller, Code Reviewer, Policy Writer, Incident Responder, Training Agent, Reporter
+Responsibilities: Security audits, compliance checks, Shield Agent deployment, Sentinel monitoring
+Tools: Security gate hooks, audit logs, Iris Vault, AppArmor
+Vault: /Matrix-Production/projects/security/
+
+### CFO AGENT — Financial Strategy & Income Factories
+**Reports to:** CEO (Hermes/Matrix)
+Sub-agents (up to 10): Trend Researcher, Market Analyst, Factory Monitor (Alpha),
+  Factory Monitor (Beta), Revenue Tracker, Pricing Optimizer, Platform Health Monitor, A/B Test Runner,
+  Competitor Spy, Report Generator
+Responsibilities: Manage all 5 income factories, track revenue, optimize pricing, research trends
+Tools: trend_scraper.py, factory_state.db, Etsy/Printify/Gumroad APIs, web search
+Vault: /Matrix-Production/projects/cfo/
+
+### CEO ORCHESTRATOR — Hermes/Matrix
+Delegates all service work to department heads. Routes tasks by complexity and service type.
+Implements HITL security gates for destructive actions.
+Runs LangGraph supervisor loop.
+
+---
+
+## 📥 KNOWLEDGE INGESTOR — DRAG & DROP SYSTEM (NEW)
+
+### What It Does
+A drag-and-drop zone in the HUD where you drop:
+- Text files (.txt, .md, .pdf)
+- Web page URLs (paste or drag link)
+- Documents (.docx, .pdf)
+
+The agent reads the content, chunks it intelligently, and saves it to the appropriate
+Obsidian vault as structured knowledge that any agent can later recall and learn from.
+
+### Processing Pipeline
+1. File/URL dropped into HUD ingestor zone
+2. Content extracted (text, PDF parse, web fetch)
+3. AI reads and identifies: topic, type, key concepts
+4. Content chunked into 400-500 line segments max
+5. Each chunk titled and indexed by topic
+6. Chapters written as separate Obsidian files
+7. Master index file created linking all chapters
+8. Saved to selected knowledge vault
+9. Agent that receives a task automatically loads relevant KB chunks
+
+### Chunk Format (Obsidian files)
+```
+/knowledge/[topic-name]/
+  00_index.md           ← Master index + summary
+  01_overview.md        ← Chapter 1
+  02_core-concepts.md   ← Chapter 2
+  03_implementation.md  ← Chapter 3
+  ...
+  NN_[topic].md         ← As many as needed
+```
+
+### Skill: knowledge_ingestor
+```python
+# New skill file: ~/.hermes/skills/knowledge/knowledge_ingestor/
+# Tools:
+#   - ingest_file(path) → chunks + saves to vault
+#   - ingest_url(url) → fetches + chunks + saves
+#   - ingest_text(text, topic) → chunks + saves
+#   - search_knowledge(query) → returns relevant chunks
+#   - list_knowledge() → all indexed topics
+```
+
+### Vault Assignment for Ingestor
+- Factual references / research → /New-matrix-vault/knowledge/
+- Client/project knowledge → /Matrix-Production/projects/[service]/kb/
+- Agent skill knowledge → /New-matrix-vault/skills/
+- Market/trend research → /Matrix-Production/projects/cfo/research/
+
+### What This Enables
+- Drop in a competitor's website → agent learns their positioning
+- Drop in a technical PDF → agent becomes expert on that topic
+- Drop in a client's documents → agent understands their business before the call
+- Drop in research papers → agents cite real facts instead of hallucinating
+- Agents load relevant KB chunks before every task automatically
+
+---
+
+## 📋 COMPLETE BUILD PLAN — ALL PHASES
+
+---
+
+### 🔴 PHASE 1 — INTELLIGENCE LAYER (Sessions 1–5)
+
+**S1 — Financial Telemetry Footer**
+Real-time cost bar in HUD. Shows model | tokens | $cost per message.
+Daily total with hard limit + TTS alert. Local savings vs paid.
+New endpoint: GET /telemetry/session
+
+**S2 — Task Scaffolding UI**
+New Project modal. Dropdown: 8 service types (from service list above).
+Fields: Name, Brief, In-Depth, Tools, Build Preferences.
+Submit → CEO generates project .md to vault.
+New endpoint: POST /projects/create
+
+**S3 — Obsidian Bi-Directional Sync**
+Read/write /mnt/data/New-matrix-vault/ and /mnt/data/Matrix-Production/
+Agent generates daily summary notes. Vault search endpoint.
+New endpoints: /vault/write, /vault/search, /vault/daily-summary
+
+**S4 — Chat Persistence + Agent Switcher**
+SQLite chat_messages table: sessionId, role, content, persona, model, cost, timestamp.
+Agent switcher in chat window — click to connect to any department head.
+Each agent: own persona, own Piper voice, own MD config file, own model.
+
+**S5 — Knowledge Ingestor (Drag & Drop)**
+Drop zone in HUD for files and URLs.
+Content extracted → AI chunks into 400-500 line segments → chapter files in Obsidian.
+Master index per topic. Knowledge search endpoint for agents.
+New skill: knowledge_ingestor. New endpoints: /ingest/file, /ingest/url, /knowledge/search
+
+---
+
+### 🟡 PHASE 2 — AGENT ARCHITECTURE (Sessions 6–9)
+
+**S6 — CEO Orchestrator + 8 Department Heads**
+One department head per Elite Nexus AI service (see list above).
+LangGraph supervisor routes tasks by service type and complexity.
+Each head has up to 10 sub-agent slots.
+Sub-agents use local vLLM (free) for execution.
+CEO only escalates to Claude Sonnet for complex tool-use or client-facing work.
+All department heads have their MD persona file and vault assignment.
+
+**S7 — CFO Agent + Factory Management**
+CFO oversees all 5 income factories + financial reporting.
+Sub-agents: trend researcher, factory monitors (alpha + beta), revenue tracker, pricing optimizer.
+Competitive KPI leaderboard in HUD (Alpha vs Beta).
+Trend scraper feeds factory pipeline automatically.
+
+**S8 — Vault Assignment System**
+Per-agent vault configuration panel.
+Three vault types per agent: Daily Notes, Projects, Knowledge Base.
+Auto-chunking: 500-line max, splits into topic chapters.
+Knowledge vault pre-loaded as context before task execution.
+Agent expertise grows automatically over time.
+
+**S9 — Wake Word + Global Hotkey**
+Whisper-based "Hermes" / "Matrix" wake word.
+Ctrl+Space system-wide hotkey.
+Auto-captures clipboard + active window on summon.
+Context fed to active department head automatically.
+
+---
+
+### 🟠 PHASE 3 — 5-FACTORY PRODUCTION ENGINE (Sessions 10–14)
+
+**S10 — Factory Infrastructure**
+/mnt/data/ai_factory/ directory structure.
+core_orchestrator.sh, factory_state.db, trend_scraper.py, image_upscaler.py.
+VRAM throttle mapping. Draft enforcement (never auto-publish).
+
+**S11 — Factory 1: Identity POD Store**
+Gothic/Techwear/Cyberpunk/Y2K niche.
+SDXL → Real-ESRGAN 300 DPI → Printify/Printful API (drafts only).
+
+**S11 — Factory 2: Stream Asset Factory**
+Twitch/YouTube/Kick streamers.
+SDXL + Stable Video Diffusion → Gumroad + Etsy (drafts).
+
+**S12 — Factory 3: Gothic Digital Press**
+Dark academia, journaling.
+PDF planner generation → Etsy + Gumroad (drafts).
+
+**S12 — Factory 4: Developer Utility Lab**
+Tech workers, devs.
+Notion workspaces, LLM prompt workbooks → Gumroad (drafts).
+
+**S13 — Factory 5: Vector Crafting House**
+Cricut crafters, laser cutters.
+potrace → ImageMagick SVG → Creative Market + Etsy (drafts).
+
+**S14 — Marketplace API Integration**
+Printify, Gumroad, Etsy, Creative Market.
+A/B testing engine. Account health monitor. Revenue dashboard in HUD.
+CFO Agent monitors all factory outputs and revenue.
+
+---
+
+### 🔵 PHASE 4 — CONTEXT ENGINE (Sessions 15–17)
+
+**S15 — Neural Brain Vault Visualization**
+(From @jonathon.mj TikTok — concept only, not built yet)
+Obsidian vault rendered as living brain particle visualization.
+Brain regions = knowledge clusters. Firing rate = recent activity.
+Toggle: Brain View ↔ Graph View.
+"Feed the brain" input lights up relevant regions.
+
+**S16 — Nexus Codebase Graph**
+(From @buildwithneej TikTok — concept only, not built yet)
+Matrix OS repo visualized as connected node graph.
+Claude Code navigates before modifying.
+"One Command Run" fires entire factory pipeline.
+Hooks panel: PRE/POST hooks + MCP configs visible in HUD.
+
+**S17 — Semantic Screen Awareness**
+EasyOCR on active window every 30 seconds.
+Context panel in HUD: active window, clipboard, relevant vault notes.
+Agent sees what you're working on without being told.
+
+---
+
+### 🔵 PHASE 5 — SECURITY + DATABASE (Sessions 18–19)
+
+**S18 — Iris Vault (PostgreSQL + pgvector)**
+Docker container with pgvector extension.
+Tables: TokenLedger, SecurityAuditLog, ProjectMemory, ChatMessages, KnowledgeChunks.
+RAG search over all Obsidian vault content.
+Core Blueprints: compress old projects for unlimited context.
+
+**S19 — Zero-Trust Security Matrix**
+Green (auto) / Yellow (notify) / Red (HITL approve in HUD).
+Git snapshot before every Red action. Rollback button.
+All actions logged to SecurityAuditLog.
+
+---
+
+### 🟣 PHASE 6 — LOCAL BUILDER SANDBOX (Sessions 20–21)
+
+**S20 — n8n + Dify Docker Sandbox**
+n8n (port 5678) + Dify (port 3000) self-hosted.
+Hermes creates workflows and RAG pipelines via API.
+
+**S21 — Idle Dreaming Mode**
+Triggers after 15 min idle. Local vLLM only — zero cost.
+Recursive Skill Synthesis. Skill Ledger in HUD.
+Natural language skill creation. Dream summary in morning briefing.
+
+---
+
+### ⚫ PHASE 7 — PRODUCTION APP (Sessions 22–23)
+
+**S22 — Tauri 2.0 Desktop App**
+Wrap HUD in Tauri 2.0. Transparent overlay. Rust backend.
+Encrypted credential vault. Resource Governor.
+
+**S23 — Virtual Agent Office 3D**
+React Three Fiber. Drag-and-drop office layout.
+3D avatars for all department heads. Factory production line view.
+Dynamic avatar spawning for sub-agents.
+
+---
+
+## 💡 WHAT EACH NEW FEATURE ENABLES
+
+### Knowledge Ingestor (Drag & Drop)
+Drop any document, URL, or text file and agents instantly become experts on that topic.
+Client brief dropped → consulting agent knows the business before the call.
+Competitor site dropped → marketing agent knows exactly what to position against.
+Technical docs dropped → product development agent can build without guessing.
+Chunks stored as readable Obsidian chapters → agents recall specific sections fast.
+
+### Department Head Architecture (8 Heads + CFO)
+Each service line has a dedicated expert agent that stays focused.
+Sub-agents under each head run on free local vLLM — only the head escalates to paid models.
+A website job never goes to the voice bot head — routing is precise.
+Up to 10 sub-agents work in parallel under each head — 5x faster than sequential execution.
+CFO Agent ties all factory income to a single financial intelligence layer.
+
+### Vault Assignment Per Agent
+Each agent writes its own daily notes in a readable, chunked format.
+Knowledge accumulates — an agent that worked on 50 chatbot projects knows chatbot patterns.
+When given a new task, the agent loads its relevant KB vault chunks first.
+This is how agents become genuine domain experts without retraining.
+
+---
+
+## 🔑 SERVICES & PORTS
+
+| Service | Port | Status |
+|---------|------|--------|
+| Matrix Bridge | 8765 | ✅ Running |
+| vLLM Qwen2.5-72B AWQ | 8000 | ✅ On demand |
+| Ollama | 11434 | ✅ Running |
+| Kokoro TTS Docker | 8880 | ⚠ Stop before vLLM |
+| n8n | 5678 | 🔵 Phase 6 |
+| Dify | 3000 | 🔵 Phase 6 |
+| Iris Vault PostgreSQL | 5432 | 🔵 Phase 5 |
+
+---
+
+*Elite Nexus AI — Matrix OS Master Project Guide v3*
+*Updated: May 25, 2026 · Next: Session 1 — Financial Telemetry Footer*
