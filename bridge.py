@@ -463,9 +463,18 @@ def knowledge_list(_=Depends(require_auth)):
     except Exception as e:
         return {"topics": [], "error": str(e)}
 
+class KnowledgeSearchReq(BaseModel):
+    query: str
+    vault: str = "both"
+
 @app.post("/knowledge/search")
-def knowledge_search(req: VaultSearchReq, _=Depends(require_auth)):
-    return vault_search(req, _)
+def knowledge_search(req: KnowledgeSearchReq, _=Depends(require_auth)):
+    results = []
+    if req.vault in ("knowledge", "both"):
+        results.extend(_vault_search(req.query, VAULT_KNOWLEDGE))
+    if req.vault in ("production", "both"):
+        results.extend(_vault_search(req.query, VAULT_PRODUCTION))
+    return {"query": req.query, "results": results, "count": len(results)}
 
 # ── Chat Persistence ───────────────────────────────────────────────────────────
 _CHAT_DB = os.path.expanduser("~/.hermes/chat_history.db")
