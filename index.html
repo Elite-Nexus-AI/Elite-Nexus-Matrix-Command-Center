@@ -352,6 +352,7 @@ body{padding-bottom:26px}
       <span id="tb-date" style="color:oklch(0.8 0.02 200/0.8)"></span>
       <span id="tb-time" class="gc" style="font-size:11px"></span>
       <button class="icon-btn" onclick="openModal('settings-modal')">⚙ CONFIG</button>
+      <button id="ceo-route-toggle" onclick="toggleAutoRoute()" style="padding:0 8px;height:28px;border:1px solid #00e5ff40;color:#00e5ff;background:transparent;font-family:inherit;font-size:7px;letter-spacing:.5px;cursor:pointer;border-radius:2px;white-space:nowrap" title="CEO Auto-Routing">⬡ CEO AUTO</button>
       <button class="icon-btn" onclick="toggleIngestor()" style="border-color:var(--mag);color:var(--mag)" title="Knowledge Ingestor">📥</button>
       <button class="icon-btn" onclick="openProjectModal()" style="border-color:var(--cyan);color:var(--cyan)" title="New Project">📋</button>
       <button class="icon-btn" onclick="openCouncilModal()" style="border-color:var(--mag);color:var(--mag)" title="Council Box">🏛️</button>
@@ -2241,6 +2242,54 @@ function handleIngestorDrop(e){
     var topic=document.getElementById('ingestor-topic').value.trim()||files[0].name.replace(/\.[^.]+$/,'');
     reader.onload=function(ev){ ingestText(ev.target.result, topic); };
     reader.readAsText(files[0]);
+  }
+}
+</script>
+
+<script>
+/* ── CEO AUTO-ROUTING ── */
+var _ceoAutoRoute = true;
+
+async function ceoRoute(message) {
+  if (!_ceoAutoRoute) return null;
+  try {
+    var r = await fetch('/ceo/route', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message: message})
+    });
+    var d = await r.json();
+    return d;
+  } catch(e) { return null; }
+}
+
+// Hook into send button / enter key to auto-route
+document.addEventListener('DOMContentLoaded', function() {
+  var input = document.getElementById('chat-input') || document.querySelector('input[type="text"]');
+  if (!input) return;
+
+  var origSend = window.sendMessage;
+  window.sendMessageWithRouting = async function(msg) {
+    if (_ceoAutoRoute && msg && msg.trim().length > 3) {
+      var route = await ceoRoute(msg);
+      if (route && route.agent_id && route.agent_id !== (_activeAgent || 'hermes-ceo')) {
+        if (window._agents && window._agents[route.agent_id]) {
+          switchAgent(route.agent_id, window._agents[route.agent_id]);
+        }
+      }
+    }
+    if (origSend) origSend(msg);
+  };
+});
+
+// Add CEO route toggle button
+function toggleAutoRoute() {
+  _ceoAutoRoute = !_ceoAutoRoute;
+  var btn = document.getElementById('ceo-route-toggle');
+  if (btn) {
+    btn.textContent = _ceoAutoRoute ? '⬡ CEO AUTO' : '⬡ MANUAL';
+    btn.style.borderColor = _ceoAutoRoute ? '#00e5ff40' : '#ffffff15';
+    btn.style.color = _ceoAutoRoute ? '#00e5ff' : '#ffffff33';
   }
 }
 </script>

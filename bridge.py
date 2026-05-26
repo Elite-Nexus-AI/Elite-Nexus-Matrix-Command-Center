@@ -341,6 +341,129 @@ def spawn_agent(req: AgentSpawn, _=Depends(require_auth)):
 
 
 
+
+# ── CEO Orchestrator + Department Head Routing ─────────────────────────────────
+DEPT_SYSTEM_PROMPTS = {
+    "hermes-ceo": "You are HERMES, CEO of Elite Nexus AI. You are sharp, British, mission-focused (Lara Croft persona). You delegate tasks to department heads and orchestrate the entire agent ecosystem. When given a task, identify which department should handle it and outline the execution plan.",
+    "website-architect": "You are the Website Architect at Elite Nexus AI. You specialize in AI-powered websites using Next.js, Tailwind, Framer Motion, SEO optimization, and conversion rate optimization. Be technical, precise, and solution-focused.",
+    "chatbot-engineer": "You are the Chatbot Engineer at Elite Nexus AI. You design conversational AI systems using Dify, n8n, and RAG pipelines. You specialize in conversation flow design, intent recognition, and chatbot integration with business systems.",
+    "voice-systems-eng": "You are the Voice Systems Engineer at Elite Nexus AI. You build voice bots and IVR systems using VAPI, Retell, Twilio, and Whisper. You specialize in telephony, SIP/VoIP, low-latency voice pipelines, and natural-sounding voice agents.",
+    "agent-architect": "You are the Agent Architect at Elite Nexus AI. You design multi-agent systems using LangGraph, MCP plugins, and Hermes. You specialize in agent memory, tool orchestration, and building autonomous AI employees and Super Agents.",
+    "automation-eng": "You are the Automation Engineer at Elite Nexus AI. You build end-to-end workflow automation using n8n, Dify, Python, and REST APIs. You specialize in connecting tools, automating business processes, and eliminating manual work.",
+    "ai-consultant": "You are the AI Consultant at Elite Nexus AI. You analyze businesses, identify AI automation opportunities, and produce detailed ROI reports. You are analytical, data-driven, and help clients understand exactly how AI will transform their operations.",
+    "social-media-head": "You are the Social Media Head at Elite Nexus AI. You create AI-driven content strategies, manage social campaigns, and grow audience engagement. You specialize in viral content, brand voice, and AI-powered social media automation.",
+    "crm-marketing-head": "You are the CRM & Marketing Head at Elite Nexus AI. You manage customer relationships, design marketing funnels, and optimize conversion rates. You specialize in AI CRM systems, email automation, and data-driven marketing campaigns.",
+    "security-head": "You are the Security Head at Elite Nexus AI. You handle cybersecurity audits, compliance checks, and AI security implementations. You specialize in threat analysis, Shield Agent deployments, and keeping systems secure and compliant.",
+    "cfo-agent": "You are the CFO Agent at Elite Nexus AI. You manage the 5 autonomous income factories, track revenue metrics, analyze market trends, and optimize pricing strategies. You monitor Factory Alpha and Beta performance and drive toward the $10K-$20K/month revenue target.",
+    "marketing-campaigns": "You are the Marketing Campaigns specialist at Elite Nexus AI. You design and execute data-powered marketing campaigns that target the right audience. You specialize in campaign strategy, ad copy, A/B testing, and performance analytics.",
+}
+
+CEO_ROUTING_PROMPT = """You are the CEO routing engine for Elite Nexus AI. Given a user message, determine which department head should handle it.
+
+Department heads:
+- website-architect: websites, landing pages, web design, Next.js, SEO
+- chatbot-engineer: chatbots, text bots, conversational AI, FAQ bots
+- voice-systems-eng: voice bots, IVR, phone systems, VAPI, Twilio, telephony
+- agent-architect: AI agents, super agents, multi-agent systems, automation employees
+- automation-eng: workflows, automation pipelines, n8n, Dify, process automation
+- ai-consultant: consulting, ROI analysis, business strategy, AI implementation advice
+- social-media-head: social media, content creation, Instagram, TikTok, LinkedIn
+- crm-marketing-head: CRM, marketing funnels, email campaigns, customer management
+- security-head: cybersecurity, compliance, security audits, data protection
+- cfo-agent: revenue, factories, income, market trends, pricing, financial analysis
+- marketing-campaigns: ad campaigns, marketing strategy, campaign design, targeting
+- hermes-ceo: general questions, project overview, delegation, anything unclear
+
+Respond with ONLY the department head ID, nothing else."""
+
+import requests as _rq5
+
+def _ceo_route(message: str) -> str:
+    """Use vLLM to route message to correct department head."""
+    try:
+        payload = {
+            "model": "qwen2.5-72b",
+            "messages": [
+                {"role": "system", "content": CEO_ROUTING_PROMPT},
+                {"role": "user", "content": message}
+            ],
+            "stream": False,
+            "temperature": 0.1,
+            "max_tokens": 30
+        }
+        r = _rq5.post("http://localhost:8000/v1/chat/completions", json=payload, timeout=30)
+        r.raise_for_status()
+        agent_id = r.json()["choices"][0]["message"]["content"].strip().lower()
+        # Validate
+        if agent_id not in DEPT_SYSTEM_PROMPTS:
+            return "hermes-ceo"
+        return agent_id
+    except:
+        return "hermes-ceo"
+
+class CEORouteReq(BaseModel):
+    message: str
+
+@app.post("/ceo/route")
+def ceo_route(req: CEORouteReq, _=Depends(require_auth)):
+    agent_id = _ceo_route(req.message)
+    agent_data = AGENTS.get(agent_id, AGENTS["hermes-ceo"])
+    return {
+        "agent_id": agent_id,
+        "agent_name": agent_data.get("name", agent_id),
+        "model": agent_data.get("model", "qwen2.5-72b"),
+        "provider": agent_data.get("provider", "vllm"),
+        "color": agent_data.get("color", "#00e5ff"),
+        "routing_reason": f"Task routed to {agent_data.get('role', agent_id)}"
+    }
+
+class CEOOrchReq(BaseModel):
+    message: str
+    agent_id: str = ""
+    persona: str = "lara-croft"
+
+@app.post("/ceo/orchestrate")
+async def ceo_orchestrate(req: CEOOrchReq, _=Depends(require_auth)):
+    """Full CEO orchestration: route + respond with dept head persona."""
+    # Route if no agent specified
+    agent_id = req.agent_id or _ceo_route(req.message)
+    system_prompt = DEPT_SYSTEM_PROMPTS.get(agent_id, DEPT_SYSTEM_PROMPTS["hermes-ceo"])
+    agent_data = AGENTS.get(agent_id, AGENTS.get("hermes-ceo", {}))
+
+    no_tts_instruction = " IMPORTANT: Do NOT use text_to_speech, edge-tts, or any TTS tools. Do NOT run mpv."
+
+    try:
+        payload = {
+            "model": agent_data.get("model", "qwen2.5-72b"),
+            "messages": [
+                {"role": "system", "content": system_prompt + no_tts_instruction},
+                {"role": "user", "content": req.message}
+            ],
+            "stream": False,
+            "temperature": 0.7,
+            "max_tokens": 1024
+        }
+        provider = agent_data.get("provider", "vllm")
+        if provider == "vllm":
+            r = _rq5.post("http://localhost:8000/v1/chat/completions", json=payload, timeout=90)
+        else:
+            payload["model"] = agent_data.get("model", "anthropic/claude-sonnet-4")
+            r = _rq5.post("https://openrouter.ai/api/v1/chat/completions",
+                         json=payload, timeout=90,
+                         headers={"Authorization": f"Bearer {OPENROUTER_KEY}"})
+        r.raise_for_status()
+        response = r.json()["choices"][0]["message"]["content"]
+        return {
+            "ok": True,
+            "agent_id": agent_id,
+            "agent_name": agent_data.get("name", agent_id),
+            "response": response,
+            "model": agent_data.get("model"),
+            "provider": provider
+        }
+    except Exception as e:
+        return {"ok": False, "error": str(e), "agent_id": agent_id}
+
 # ── Knowledge Ingestor ─────────────────────────────────────────────────────────
 import re as _re2, urllib.request as _urlreq
 
