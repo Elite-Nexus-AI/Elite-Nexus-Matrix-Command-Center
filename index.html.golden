@@ -257,6 +257,81 @@ body{
   letter-spacing:.5px;margin-right:4px;
 }
 body{padding-bottom:26px}
+
+/* ── PROJECT MODAL & COUNCIL BOX ─────────────────────────── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:#000000cc;
+  z-index:10000;align-items:center;justify-content:center;
+}
+.modal-overlay.open{display:flex}
+.modal-box{
+  background:#09101d;border:1px solid #00e5ff30;border-radius:6px;
+  width:580px;max-width:95vw;max-height:85vh;overflow-y:auto;
+  box-shadow:0 0 40px #00e5ff15;
+}
+.modal-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;border-bottom:1px solid #00e5ff15;
+  background:#060d18;border-radius:6px 6px 0 0;
+}
+.modal-title{font-size:10px;letter-spacing:2px;color:#00e5ff;font-weight:bold}
+.modal-close{background:transparent;border:1px solid #ff333530;color:#ff3333;
+  width:22px;height:22px;border-radius:2px;cursor:pointer;font-size:12px;
+  display:flex;align-items:center;justify-content:center}
+.modal-body{padding:14px 16px}
+.form-group{margin-bottom:12px}
+.form-label{font-size:7px;letter-spacing:1.5px;color:#00e5ff66;
+  display:block;margin-bottom:4px}
+.form-input,.form-select,.form-textarea{
+  width:100%;background:#060d18;border:1px solid #00e5ff18;
+  color:#00e5ff;padding:6px 8px;font-size:9px;font-family:'Courier New',monospace;
+  border-radius:3px;outline:none;transition:border-color .2s;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:#00e5ff40}
+.form-input::placeholder,.form-textarea::placeholder{color:#00e5ff22}
+.form-select option{background:#09101d}
+.form-textarea{resize:vertical;min-height:60px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tool-chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.tool-chip{padding:2px 8px;border:1px solid #00e5ff18;border-radius:2px;
+  font-size:7px;color:#00e5ff44;cursor:pointer;transition:all .15s;
+  font-family:'Courier New',monospace}
+.tool-chip.selected{border-color:#00e5ff;color:#00e5ff;background:#00e5ff12}
+.modal-footer{padding:10px 16px;border-top:1px solid #00e5ff12;
+  display:flex;gap:8px;justify-content:flex-end;background:#060d18;
+  border-radius:0 0 6px 6px}
+.btn-primary{padding:6px 16px;background:linear-gradient(135deg,#00e5ff18,#ff00ff18);
+  border:1px solid #00e5ff40;color:#00e5ff;font-family:inherit;font-size:8px;
+  letter-spacing:1px;cursor:pointer;border-radius:3px;transition:all .2s}
+.btn-primary:hover{background:linear-gradient(135deg,#00e5ff25,#ff00ff25)}
+.btn-secondary{padding:6px 16px;background:transparent;border:1px solid #ffffff15;
+  color:#ffffff44;font-family:inherit;font-size:8px;cursor:pointer;border-radius:3px}
+/* COUNCIL */
+.council-dropzone{
+  background:#08101e;border:2px dashed #aa44ff28;border-radius:4px;
+  padding:16px;text-align:center;cursor:pointer;transition:all .2s;
+  margin-bottom:10px;
+}
+.council-dropzone:hover,.council-dropzone.drag-over{
+  border-color:#aa44ff55;background:#0e0818}
+.council-dropzone-title{font-size:9px;color:#aa44ff77;
+  letter-spacing:1px;font-weight:bold;margin-bottom:4px}
+.council-dropzone-sub{font-size:7px;color:#ffffff20;line-height:1.5}
+.council-result{
+  background:#060d18;border:1px solid #aa44ff20;border-radius:3px;
+  padding:10px;font-size:8px;line-height:1.6;color:#ffffff66;
+  white-space:pre-wrap;max-height:300px;overflow-y:auto;
+  display:none;margin-top:10px;
+}
+.council-result.visible{display:block}
+.council-thinking{color:#aa44ff88;font-size:8px;padding:8px;text-align:center;display:none}
+.council-thinking.visible{display:block}
+/* PROJECT LIST */
+.proj-item{display:flex;align-items:center;gap:8px;padding:4px 6px;
+  border-bottom:1px solid #00e5ff08;font-size:8px}
+.proj-svc{font-size:6px;padding:1px 4px;border:1px solid #00e5ff18;
+  color:#00e5ff55;border-radius:2px;flex-shrink:0}
+.proj-name{flex:1;color:#00e5ffaa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -277,6 +352,8 @@ body{padding-bottom:26px}
       <span id="tb-date" style="color:oklch(0.8 0.02 200/0.8)"></span>
       <span id="tb-time" class="gc" style="font-size:11px"></span>
       <button class="icon-btn" onclick="openModal('settings-modal')">⚙ CONFIG</button>
+      <button class="icon-btn" onclick="openProjectModal()" style="border-color:var(--cyan);color:var(--cyan)" title="New Project">📋</button>
+      <button class="icon-btn" onclick="openCouncilModal()" style="border-color:var(--mag);color:var(--mag)" title="Council Box">🏛️</button>
       <button class="icon-btn" onclick="openModal('agent-modal')" style="border-color:var(--mag);color:var(--mag)">⬡ AGENTS</button>
     </div>
   </div>
@@ -1643,6 +1720,224 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Export so SSE handler can call it
 window.updateTelBar = updateTelBar;
+</script>
+
+<!-- ══ PROJECT MODAL ══ -->
+<div class="modal-overlay" id="project-modal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <span class="modal-title">📋 NEW PROJECT · TASK SCAFFOLDING</span>
+      <button class="modal-close" onclick="closeModal('project-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">SERVICE TYPE</label>
+        <select class="form-select" id="proj-service">
+          <option>AI Smart Websites</option>
+          <option>AI Chatbots & Text Bots</option>
+          <option>AI Voice Bots</option>
+          <option>IVR Phone Systems</option>
+          <option>AI Agents</option>
+          <option>AI Super Agents</option>
+          <option>AI Workflows</option>
+          <option>AI Consulting</option>
+          <option>AI Social Media Marketing</option>
+          <option>AI Marketing Campaigns</option>
+          <option>AI CRM</option>
+          <option>Cybersecurity</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">PROJECT NAME</label>
+        <input class="form-input" id="proj-name" placeholder="e.g. LawFirm Landing Page v2">
+      </div>
+      <div class="form-group">
+        <label class="form-label">BRIEF DESCRIPTION</label>
+        <input class="form-input" id="proj-brief" placeholder="One-line summary of what this project does">
+      </div>
+      <div class="form-group">
+        <label class="form-label">IN-DEPTH DESCRIPTION</label>
+        <textarea class="form-textarea" id="proj-indepth" placeholder="Full feature list, requirements, target audience, technical specs..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">TOOL ASSIGNMENT (click to select)</label>
+        <div class="tool-chips" id="tool-chips">
+          <span class="tool-chip" onclick="toggleTool(this)">n8n</span>
+          <span class="tool-chip" onclick="toggleTool(this)">Dify</span>
+          <span class="tool-chip" onclick="toggleTool(this)">Next.js</span>
+          <span class="tool-chip" onclick="toggleTool(this)">FastAPI</span>
+          <span class="tool-chip" onclick="toggleTool(this)">LangGraph</span>
+          <span class="tool-chip" onclick="toggleTool(this)">Claude Code</span>
+          <span class="tool-chip" onclick="toggleTool(this)">Vercel</span>
+          <span class="tool-chip" onclick="toggleTool(this)">VAPI</span>
+          <span class="tool-chip" onclick="toggleTool(this)">Twilio</span>
+          <span class="tool-chip selected" onclick="toggleTool(this)">Auto</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">BUILD PREFERENCES</label>
+        <input class="form-input" id="proj-prefs" placeholder="e.g. Prioritize speed, mobile-first, dark mode only">
+      </div>
+      <div id="proj-result" style="display:none;padding:8px;background:#00ff8810;border:1px solid #00ff8825;border-radius:3px;font-size:8px;color:#00ff88;margin-top:8px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('project-modal')">CANCEL</button>
+      <button class="btn-primary" onclick="createProject()">→ CREATE PROJECT SCOPE</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ COUNCIL BOX MODAL ══ -->
+<div class="modal-overlay" id="council-modal">
+  <div class="modal-box" style="width:640px">
+    <div class="modal-hdr" style="border-color:#aa44ff20">
+      <span class="modal-title" style="color:#aa44ff">🏛️ THE COUNCIL BOX · STRATEGIC FORGE</span>
+      <button class="modal-close" onclick="closeModal('council-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="council-dropzone" id="council-dz"
+           ondragover="event.preventDefault();this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')"
+           ondrop="handleCouncilDrop(event)">
+        <div class="council-dropzone-title">⬇ DROP BUSINESS BRIEF · PDF · RULES · MODEL</div>
+        <div class="council-dropzone-sub">Drop files or URLs here — Claude runs 4-perspective critique<br>Technical QA · ROI Strategist · Infrastructure Architect · Risk Analyst</div>
+        <div style="display:flex;gap:4px;justify-content:center;margin-top:6px;flex-wrap:wrap">
+          <span style="font-size:6px;padding:1px 5px;border:1px solid #aa44ff18;color:#aa44ff44;border-radius:2px">.pdf</span>
+          <span style="font-size:6px;padding:1px 5px;border:1px solid #aa44ff18;color:#aa44ff44;border-radius:2px">.txt</span>
+          <span style="font-size:6px;padding:1px 5px;border:1px solid #aa44ff18;color:#aa44ff44;border-radius:2px">.md</span>
+          <span style="font-size:6px;padding:1px 5px;border:1px solid #aa44ff18;color:#aa44ff44;border-radius:2px">.docx</span>
+          <span style="font-size:6px;padding:1px 5px;border:1px solid #aa44ff18;color:#aa44ff44;border-radius:2px">URL</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="color:#aa44ff66">OR TYPE / PASTE YOUR CONCEPT</label>
+        <textarea class="form-textarea" id="council-input" style="border-color:#aa44ff18;color:#aa44ffaa;min-height:80px"
+          placeholder="Describe the business model, project idea, client brief, or operational concept you want analyzed..."></textarea>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn-primary" style="flex:1;border-color:#aa44ff40;color:#aa44ff"
+          onclick="triggerCouncil()">🏛 TRIGGER COUNCIL ANALYSIS</button>
+      </div>
+      <div class="council-thinking" id="council-thinking">
+        ⧗ Council convening... Technical QA · ROI Strategist · Architect · Risk Analyst reviewing...
+      </div>
+      <div class="council-result" id="council-result"></div>
+      <div id="council-to-project" style="display:none;margin-top:8px">
+        <button class="btn-primary" style="width:100%;border-color:#00e5ff40"
+          onclick="councilToProject()">→ SEND TO PROJECT SCAFFOLDING</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── PROJECT MODAL LOGIC ── */
+function openProjectModal(){ document.getElementById('project-modal').classList.add('open') }
+function closeModal(id){ document.getElementById(id).classList.remove('open') }
+
+function toggleTool(el){
+  el.classList.toggle('selected');
+}
+
+function getSelectedTools(){
+  return Array.from(document.querySelectorAll('#tool-chips .tool-chip.selected'))
+    .map(el => el.textContent);
+}
+
+async function createProject(){
+  const name = document.getElementById('proj-name').value.trim();
+  if(!name){ alert('Project name required'); return; }
+  const payload = {
+    name: name,
+    service: document.getElementById('proj-service').value,
+    brief: document.getElementById('proj-brief').value,
+    indepth: document.getElementById('proj-indepth').value,
+    tools: getSelectedTools(),
+    build_prefs: document.getElementById('proj-prefs').value
+  };
+  const btn = event.target;
+  btn.textContent = '⧗ CREATING...';
+  btn.disabled = true;
+  try {
+    const r = await fetch('/projects/create', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const d = await r.json();
+    const res = document.getElementById('proj-result');
+    res.style.display = 'block';
+    if(d.ok){
+      res.textContent = '✅ Project scope created: ' + d.path;
+      res.style.borderColor = '#00ff8825';
+      res.style.color = '#00ff88';
+      res.style.background = '#00ff8810';
+      setTimeout(()=>closeModal('project-modal'), 2500);
+      if(typeof addMsg === 'function')
+        addMsg('system', '📋 Project "' + payload.name + '" scaffolded → ' + d.path);
+    } else {
+      res.textContent = '✗ Error: ' + d.error;
+      res.style.color = '#ff3333';
+    }
+  } catch(e){
+    document.getElementById('proj-result').textContent = '✗ ' + e.message;
+    document.getElementById('proj-result').style.display = 'block';
+  }
+  btn.textContent = '→ CREATE PROJECT SCOPE';
+  btn.disabled = false;
+}
+
+/* ── COUNCIL BOX LOGIC ── */
+function openCouncilModal(){ document.getElementById('council-modal').classList.add('open') }
+
+function handleCouncilDrop(e){
+  e.preventDefault();
+  document.getElementById('council-dz').classList.remove('drag-over');
+  const text = e.dataTransfer.getData('text');
+  if(text) document.getElementById('council-input').value = text;
+  const files = e.dataTransfer.files;
+  if(files.length > 0){
+    const reader = new FileReader();
+    reader.onload = ev => document.getElementById('council-input').value = ev.target.result;
+    reader.readAsText(files[0]);
+  }
+}
+
+async function triggerCouncil(){
+  const content = document.getElementById('council-input').value.trim();
+  if(!content){ alert('Please enter a concept or brief to analyze'); return; }
+  document.getElementById('council-thinking').classList.add('visible');
+  document.getElementById('council-result').classList.remove('visible');
+  document.getElementById('council-to-project').style.display = 'none';
+  try {
+    const r = await fetch('/council/analyze', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({content, content_type:'text'})
+    });
+    const d = await r.json();
+    document.getElementById('council-thinking').classList.remove('visible');
+    if(d.ok){
+      document.getElementById('council-result').textContent = d.analysis;
+      document.getElementById('council-result').classList.add('visible');
+      document.getElementById('council-to-project').style.display = 'block';
+    } else {
+      document.getElementById('council-result').textContent = 'Error: ' + d.error;
+      document.getElementById('council-result').classList.add('visible');
+    }
+  } catch(e){
+    document.getElementById('council-thinking').classList.remove('visible');
+    document.getElementById('council-result').textContent = 'Error: ' + e.message;
+    document.getElementById('council-result').classList.add('visible');
+  }
+}
+
+function councilToProject(){
+  const analysis = document.getElementById('council-result').textContent;
+  document.getElementById('proj-indepth').value = analysis.substring(0, 1000);
+  closeModal('council-modal');
+  openProjectModal();
+}
 </script>
 </body>
 </html>

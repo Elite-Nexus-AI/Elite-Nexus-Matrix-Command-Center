@@ -337,6 +337,157 @@ def spawn_agent(req: AgentSpawn, _=Depends(require_auth)):
     return {"ok": True, "action": "spawned"}
 
 
+
+# ── Project Scaffolding & Council Box ─────────────────────────────────────────
+import datetime as _dt
+
+PROJECTS_DIR = Path("/mnt/data/Matrix-Production/projects")
+VAULT_DIR    = Path.home() / "mnt/data/New-matrix-vault"
+
+class ProjectReq(BaseModel):
+    name: str
+    service: str
+    brief: str = ""
+    indepth: str = ""
+    tools: list = []
+    build_prefs: str = ""
+
+@app.post("/projects/create")
+def projects_create(req: ProjectReq, _=Depends(require_auth)):
+    try:
+        # Map service to folder
+        service_map = {
+            "AI Smart Websites":        "websites",
+            "AI Chatbots & Text Bots":  "chatbots",
+            "AI Voice Bots":            "voicebots",
+            "IVR Phone Systems":        "voicebots",
+            "AI Agents":                "agents",
+            "AI Super Agents":          "agents",
+            "AI Workflows":             "workflows",
+            "AI Consulting":            "consulting",
+            "AI Social Media Marketing":"marketing",
+            "AI Marketing Campaigns":   "marketing",
+            "AI CRM":                   "crm",
+            "Cybersecurity":            "security",
+        }
+        folder = service_map.get(req.service, "general")
+        proj_dir = Path(f"/mnt/data/Matrix-Production/projects/{folder}/{req.name.replace(' ','_').lower()}")
+        proj_dir.mkdir(parents=True, exist_ok=True)
+
+        ts = _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
+        tools_str = ", ".join(req.tools) if req.tools else "Auto-select"
+
+        md = f"""# {req.name}
+> Created: {ts}
+> Service: {req.service}
+> Status: QUEUED
+> Tools: {tools_str}
+
+## Brief
+{req.brief or "No brief provided."}
+
+## In-Depth Description
+{req.indepth or "No detailed description provided."}
+
+## Build Preferences
+{req.build_prefs or "None specified."}
+
+## Sub-Agent Tasks
+- [ ] Analysis & Planning
+- [ ] Design & Architecture
+- [ ] Implementation
+- [ ] QA & Testing
+- [ ] Deployment
+
+## Notes
+"""
+        scope_file = proj_dir / "project_scope.md"
+        scope_file.write_text(md)
+
+        return {
+            "ok": True,
+            "path": str(scope_file),
+            "folder": folder,
+            "name": req.name,
+            "message": f"Project scope created at {scope_file}"
+        }
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+@app.get("/projects/list")
+def projects_list(_=Depends(require_auth)):
+    try:
+        base = Path("/mnt/data/Matrix-Production/projects")
+        projects = []
+        if base.exists():
+            for service_dir in sorted(base.iterdir()):
+                if service_dir.is_dir():
+                    for proj_dir in sorted(service_dir.iterdir(), reverse=True):
+                        scope = proj_dir / "project_scope.md"
+                        if scope.exists():
+                            lines = scope.read_text().split("\n")
+                            brief = ""
+                            for l in lines:
+                                if l.startswith("> Created:"): ts = l.replace("> Created:","").strip()
+                                if l.startswith("> Service:"): svc = l.replace("> Service:","").strip()
+                            projects.append({
+                                "name": proj_dir.name,
+                                "service": service_dir.name,
+                                "path": str(scope)
+                            })
+        return {"projects": projects[:20]}
+    except Exception as e:
+        return {"projects": [], "error": str(e)}
+
+class CouncilReq(BaseModel):
+    content: str
+    content_type: str = "text"  # text, url, file
+
+@app.post("/council/analyze")
+async def council_analyze(req: CouncilReq, _=Depends(require_auth)):
+    try:
+        council_prompt = f"""You are the Elite Nexus AI Strategic Council. Analyze this project brief from 4 perspectives:
+
+**INPUT:**
+{req.content[:3000]}
+
+Provide your analysis in this exact format:
+
+## 🔧 Technical QA Lead
+[Identify technical risks, architecture gaps, implementation challenges]
+
+## 💰 ROI Financial Strategist
+[Evaluate revenue potential, cost structure, ROI timeline, market fit]
+
+## 🏗 Infrastructure Architect
+[Assess scalability, tech stack choices, integration complexity]
+
+## ⚠️ Risk Analyst
+[Surface legal risks, competitive threats, execution risks, scope creep]
+
+## ✅ Recommended Automation Vectors
+[List 3-5 specific Elite Nexus AI services that apply to this project]
+
+## 📋 Optimized Project Scope Summary
+[2-3 sentence executive summary of what to build and why]
+"""
+        # Use vLLM for council analysis (free, powerful)
+        payload = {
+            "model": "qwen2.5-72b",
+            "messages": [{"role": "user", "content": council_prompt}],
+            "stream": False,
+            "temperature": 0.7,
+            "max_tokens": 2048
+        }
+        import requests as _req
+        r = _req.post("http://localhost:8000/v1/chat/completions",
+                      json=payload, timeout=120)
+        r.raise_for_status()
+        analysis = r.json()["choices"][0]["message"]["content"]
+        return {"ok": True, "analysis": analysis}
+    except Exception as e:
+        return {"ok": False, "error": str(e), "analysis": f"Council analysis failed: {e}"}
+
 # ── Telemetry endpoints ────────────────────────────────────────────────────────
 @app.get("/telemetry/session")
 def telemetry_session(_=Depends(require_auth)):
