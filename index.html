@@ -85,7 +85,7 @@ body{
 .bridge-dot{width:8px;height:8px;border-radius:50%;}
 .icon-btn{padding:3px 8px;border:1px solid oklch(0.85 0.18 200/0.35);border-radius:2px;background:none;cursor:pointer;color:var(--muted-fg);font-family:'JetBrains Mono',monospace;font-size:10px;display:flex;align-items:center;gap:5px;transition:color .2s,border-color .2s;}
 .icon-btn:hover{color:var(--cyan);border-color:var(--cyan);}
-#hud{flex:1;display:grid;gap:10px;padding:10px;min-height:0;overflow:auto;grid-template-columns:minmax(280px,1.05fr) minmax(0,1.35fr) minmax(280px,1.05fr);grid-template-rows:auto auto 1fr;}
+#hud{flex:1;display:grid;gap:14px;padding:14px;min-height:0;overflow:auto;grid-template-columns:minmax(280px,1.05fr) minmax(0,1.35fr) minmax(280px,1.05fr);grid-template-rows:auto auto 1fr;}
 /* GPU */
 .gpu-body{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;flex:1;}
 .gpu-bars{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
@@ -127,7 +127,7 @@ body{
 .agent-task{font-family:'JetBrains Mono',monospace;font-size:10px;color:oklch(0.9 0.02 200/0.7);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .agent-el{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted-fg);width:36px;text-align:right;}
 /* Vault */
-.vault-body{flex:1;position:relative;min-height:180px;}
+.vault-body{flex:1;position:relative;min-height:200px;}
 .vault-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;}
 /* CHAT */
 .chat-tile{display:flex;flex-direction:column;height:100%;overflow:hidden;}
@@ -198,8 +198,8 @@ body{
 .btn-m{border-color:var(--mag);color:var(--mag);box-shadow:0 0 8px oklch(0.7 0.28 330/0.3);}
 .btn-dim{border-color:oklch(0.5 0.04 220);color:oklch(0.7 0.04 220);}
 /* Row 2/3 spans */
-.r2{grid-column:1/-1;display:grid;gap:10px;grid-template-columns:1.2fr 1fr 1fr;}
-.r3{grid-column:1/-1;display:grid;gap:10px;grid-template-columns:1fr 1.7fr 1fr;min-height:320px;}
+.r2{grid-column:1/-1;display:grid;gap:14px;grid-template-columns:1.2fr 1fr 1fr;}
+.r3{grid-column:1/-1;display:grid;gap:14px;grid-template-columns:1fr 1.8fr 1fr 1fr;min-height:340px;}
 /* Scrollbar */
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -232,17 +232,17 @@ body{
 
 /* ── TELEMETRY FOOTER ─────────────────────────────────────────────── */
 #tel-bar{
-  position:fixed;bottom:0;left:0;right:0;height:26px;
-  background:#05080f;border-top:1px solid #00e5ff22;
+  position:fixed;bottom:0;left:0;right:0;height:22px;
+  background:oklch(0.08 0.03 260/0.95);border-top:1px solid oklch(0.85 0.18 200/0.15);
   display:flex;align-items:center;gap:0;z-index:9999;
-  font-family:'Courier New',monospace;font-size:9px;
-  user-select:none;
+  font-family:'JetBrains Mono',monospace;font-size:8px;
+  user-select:none;backdrop-filter:blur(8px);
 }
 .tel-seg{
-  display:flex;align-items:center;gap:5px;padding:0 12px;
-  border-right:1px solid #00e5ff12;height:100%;
+  display:flex;align-items:center;gap:4px;padding:0 10px;
+  border-right:1px solid oklch(0.85 0.18 200/0.1);height:100%;
 }
-.tel-label{color:#ffffff25;font-size:7px;letter-spacing:.5px}
+.tel-label{color:oklch(0.5 0.05 200);font-size:7px;letter-spacing:.5px;text-transform:uppercase}
 .tel-val{font-weight:bold}
 .tel-val.free{color:#00ff88}
 .tel-val.paid{color:#ffd700}
@@ -256,7 +256,7 @@ body{
   font-size:7px;padding:1px 6px;border-radius:2px;border:1px solid;
   letter-spacing:.5px;margin-right:4px;
 }
-body{padding-bottom:26px}
+body{padding-bottom:22px}
 
 /* ── PROJECT MODAL & COUNCIL BOX ─────────────────────────── */
 .modal-overlay{
@@ -339,25 +339,77 @@ body{padding-bottom:26px}
   <div class="scanlines"></div>
 
   <!-- TOP BAR -->
-  <div id="topbar">
-    <div class="tb-left">
-      <span class="gc glitch" style="font-size:11px">ELITE NEXUS // MATRIX HUD</span>
-      <span style="color:var(--muted-fg);display:none" id="spec-label">v2.0 — ZORIN OS / I9 / 2× RTX 3090 / 128GB</span>
-    </div>
-    <div class="tb-right">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span class="bridge-dot ticking" id="bridge-dot" style="background:var(--danger);box-shadow:0 0 8px var(--danger)"></span>
-        <span id="bridge-status" style="color:var(--danger);font-size:11px">BRIDGE OFFLINE</span>
+  <div id="topbar" style="display:flex;align-items:center;justify-content:space-between;gap:0;padding:0 16px;border-bottom:1px solid oklch(0.85 0.18 200/0.25);background:oklch(0.08 0.03 260/0.95);backdrop-filter:blur(12px);z-index:50;flex-shrink:0;height:44px;">
+
+    <!-- LEFT: BRAND -->
+    <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
+      <span class="gc glitch" style="font-size:11px;letter-spacing:3px;white-space:nowrap">ELITE NEXUS // MATRIX</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="bridge-dot ticking" id="bridge-dot" style="background:var(--danger);box-shadow:0 0 8px var(--danger);width:7px;height:7px;border-radius:50%;flex-shrink:0"></span>
+        <span id="bridge-status" style="color:var(--danger);font-size:9px;letter-spacing:1px">OFFLINE</span>
       </div>
-      <span id="tb-date" style="color:oklch(0.8 0.02 200/0.8)"></span>
-      <span id="tb-time" class="gc" style="font-size:11px"></span>
-      <button id="ceo-route-toggle" onclick="toggleAutoRoute()" style="padding:0 8px;height:28px;border:1px solid #00e5ff40;color:#00e5ff;background:transparent;font-family:inherit;font-size:7px;letter-spacing:.5px;cursor:pointer;border-radius:2px;white-space:nowrap" title="CEO Auto-Routing">⬡ CEO AUTO</button>
-      <button class="icon-btn" onclick="openModal('settings-modal')">⚙ CONFIG</button>
-      <button class="icon-btn" onclick="openProjectModal()" style="border-color:var(--cyan);color:var(--cyan)" title="New Project">📋</button>
-      <button class="icon-btn" onclick="openCouncilModal()" style="border-color:var(--mag);color:var(--mag)" title="Council Box">🏛️</button>
-      <button class="icon-btn" onclick="openModal('agent-modal')" style="border-color:var(--mag);color:var(--mag)">⬡ AGENTS</button>
+    </div>
+
+    <!-- CENTER: NAV MENU -->
+    <nav style="display:flex;align-items:center;gap:2px;flex:1;justify-content:center">
+      <div class="nav-group">
+        <button class="nav-btn" onclick="openProjectModal()">📋 PROJECTS</button>
+      </div>
+      <div class="nav-group">
+        <button class="nav-btn" onclick="openCouncilModal()">🏛 COUNCIL</button>
+      </div>
+      <div class="nav-group">
+        <button class="nav-btn" onclick="navToggleIngestor()" title="Knowledge Ingestor - drag &amp; drop files/URLs">📥 INGEST</button>
+      </div>
+      <div class="nav-group">
+        <button class="nav-btn" onclick="document.getElementById('agent-roster-panel').classList.toggle('open')" title="Department Head Agents">⬡ AGENTS</button>
+      </div>
+      <div class="nav-group">
+        <button class="nav-btn" onclick="document.getElementById('vault-assign-panel').classList.toggle('open')" title="Vault Assignment per Agent">🗄 VAULTS</button>
+      </div>
+      <div class="nav-group">
+        <button class="nav-btn nav-btn-ceo" id="ceo-route-toggle" onclick="toggleAutoRoute()" title="CEO Auto-routes messages to correct dept head">⬡ CEO AUTO</button>
+      </div>
+      <div class="nav-group">
+        <button class="nav-btn" onclick="navCfoBrief()" title="CFO Agent generates factory performance brief">₿ CFO</button>
+      </div>
+      <div class="nav-group">
+        <button class="nav-btn" onclick="navMorningBrief()" title="Morning briefing - Gmail + Calendar">🌅 BRIEF</button>
+      </div>
+      <div class="nav-group">
+        <button class="nav-btn" onclick="navFactoryStatus()" title="View all 5 factory revenues">⚡ FACTORY</button>
+      </div>
+      <div class="nav-group">
+        <button class="nav-btn" onclick="navVaultSync()" title="Sync and refresh Obsidian vaults">🔄 SYNC</button>
+      </div>
+    </nav>
+
+    <!-- RIGHT: STATUS -->
+    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <span id="tb-date" style="color:oklch(0.6 0.02 200);font-size:9px;letter-spacing:1px"></span>
+      <span id="tb-time" class="gc" style="font-size:11px;letter-spacing:1px"></span>
+      <button class="nav-btn" onclick="openModal('settings-modal')" style="border-color:oklch(0.85 0.18 200/0.3)">⚙</button>
+      <span style="color:var(--muted-fg);font-size:9px;display:none" id="spec-label">I9 · 2×3090 · 128GB</span>
     </div>
   </div>
+
+  <style>
+  .nav-btn{
+    padding:4px 10px;border:1px solid oklch(0.85 0.18 200/0.2);
+    border-radius:3px;background:transparent;cursor:pointer;
+    color:oklch(0.7 0.1 200);font-family:'JetBrains Mono',monospace;
+    font-size:8.5px;letter-spacing:1px;text-transform:uppercase;
+    transition:all .15s;white-space:nowrap;
+  }
+  .nav-btn:hover{
+    color:var(--cyan);border-color:oklch(0.85 0.18 200/0.6);
+    background:oklch(0.85 0.18 200/0.06);
+    box-shadow:0 0 8px oklch(0.85 0.18 200/0.2);
+  }
+  .nav-btn-ceo{border-color:oklch(0.85 0.18 200/0.35);color:var(--cyan);}
+  .nav-btn-ceo:hover{box-shadow:0 0 12px oklch(0.85 0.18 200/0.35);}
+  .nav-group{position:relative;}
+  </style>
 
   <!-- INIT -->
   <div id="init"><span class="init-txt">▌INITIALIZING MATRIX HUD v2…</span></div>
@@ -387,7 +439,196 @@ body{padding-bottom:26px}
         </svg>
         <svg id="logo-eq" width="320" height="320" viewBox="0 0 320 320" aria-hidden="true"></svg>
         <div id="logo-img-w">
-          <img id="logo-img" src="https://d2xsxph8kpxj0f.cloudfront.net/310519663556295192/7jxcpmYhbWw6CFk5dJ5yBs/elite-nexus-logo-mtQyXc6r87gqejRYQZnyoo.webp" alt="Elite Nexus AI" draggable="false" onerror="this.style.opacity='0'">
+          <svg id="cyber-heart" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+            <defs>
+              <radialGradient id="reactorGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.6"/>
+                <stop offset="40%" stop-color="#00e5ff" stop-opacity="0.15"/>
+                <stop offset="100%" stop-color="#00e5ff" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+                <stop offset="30%" stop-color="#00e5ff" stop-opacity="0.9"/>
+                <stop offset="100%" stop-color="#00e5ff" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="heartGrad" cx="50%" cy="40%" r="60%">
+                <stop offset="0%" stop-color="#ff00ff" stop-opacity="0.25"/>
+                <stop offset="60%" stop-color="#00e5ff" stop-opacity="0.12"/>
+                <stop offset="100%" stop-color="#000010" stop-opacity="0"/>
+              </radialGradient>
+              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <filter id="strongglow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="8" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <clipPath id="heartClip">
+                <path d="M120,175 C120,175 52,135 52,90 C52,65 70,48 92,48 C106,48 118,57 120,64 C122,57 134,48 148,48 C170,48 188,65 188,90 C188,135 120,175 120,175 Z"/>
+              </clipPath>
+            </defs>
+
+            <!-- Outer rotating ring -->
+            <g style="transform-origin:120px 120px;animation:rotateSlow 12s linear infinite">
+              <circle cx="120" cy="120" r="108" fill="none" stroke="#00e5ff" stroke-width="0.5" stroke-opacity="0.3" stroke-dasharray="3 9"/>
+              <circle cx="120" cy="12" r="3" fill="#00e5ff" opacity="0.7"/>
+              <circle cx="120" cy="228" r="2" fill="#ff00ff" opacity="0.5"/>
+              <circle cx="12" cy="120" r="2" fill="#00e5ff" opacity="0.5"/>
+              <circle cx="228" cy="120" r="2" fill="#00e5ff" opacity="0.5"/>
+            </g>
+
+            <!-- Second counter-rotating ring -->
+            <g style="transform-origin:120px 120px;animation:rotateSlow 20s linear infinite reverse">
+              <circle cx="120" cy="120" r="92" fill="none" stroke="#ff00ff" stroke-width="0.4" stroke-opacity="0.2" stroke-dasharray="1 12"/>
+            </g>
+
+            <!-- Heart shape fill -->
+            <path d="M120,175 C120,175 52,135 52,90 C52,65 70,48 92,48 C106,48 118,57 120,64 C122,57 134,48 148,48 C170,48 188,65 188,90 C188,135 120,175 120,175 Z"
+              fill="url(#heartGrad)" filter="url(#glow)"/>
+
+            <!-- Heart outline with glow -->
+            <path d="M120,175 C120,175 52,135 52,90 C52,65 70,48 92,48 C106,48 118,57 120,64 C122,57 134,48 148,48 C170,48 188,65 188,90 C188,135 120,175 120,175 Z"
+              fill="none" stroke="#00e5ff" stroke-width="1.2" stroke-opacity="0.7" filter="url(#glow)"/>
+
+            <!-- Circuit lines inside heart -->
+            <g clip-path="url(#heartClip)" opacity="0.4">
+              <line x1="80" y1="70" x2="160" y2="70" stroke="#00e5ff" stroke-width="0.5" stroke-dasharray="4 6"/>
+              <line x1="70" y1="90" x2="170" y2="90" stroke="#00e5ff" stroke-width="0.5" stroke-dasharray="3 8"/>
+              <line x1="65" y1="110" x2="175" y2="110" stroke="#ff00ff" stroke-width="0.4" stroke-dasharray="2 10"/>
+              <line x1="75" y1="130" x2="165" y2="130" stroke="#00e5ff" stroke-width="0.4" stroke-dasharray="4 6"/>
+              <line x1="120" y1="50" x2="120" y2="170" stroke="#00e5ff" stroke-width="0.4" stroke-dasharray="2 8"/>
+              <line x1="90" y1="55" x2="90" y2="150" stroke="#00e5ff" stroke-width="0.3" stroke-dasharray="2 10"/>
+              <line x1="150" y1="55" x2="150" y2="150" stroke="#ff00ff" stroke-width="0.3" stroke-dasharray="2 10"/>
+            </g>
+
+            <!-- Arc Reactor outer ring -->
+            <circle cx="120" cy="105" r="36" fill="none" stroke="#00e5ff" stroke-width="1" stroke-opacity="0.5"/>
+
+            <!-- Arc Reactor tri-sections -->
+            <path d="M120,69 L120,105 L149.2,122.5" fill="none" stroke="#00e5ff" stroke-width="0.8" stroke-opacity="0.6"/>
+            <path d="M149.2,122.5 L120,105 L90.8,122.5" fill="none" stroke="#00e5ff" stroke-width="0.8" stroke-opacity="0.6"/>
+            <path d="M90.8,122.5 L120,105 L120,69" fill="none" stroke="#00e5ff" stroke-width="0.8" stroke-opacity="0.6"/>
+
+            <!-- Reactor ring segments with animation -->
+            <circle cx="120" cy="105" r="28" fill="none" stroke="#00e5ff" stroke-width="2" stroke-opacity="0.4"
+              stroke-dasharray="14 8" style="transform-origin:120px 105px;animation:rotateSlow 4s linear infinite"/>
+            <circle cx="120" cy="105" r="20" fill="none" stroke="#ff00ff" stroke-width="1.5" stroke-opacity="0.5"
+              stroke-dasharray="8 6" style="transform-origin:120px 105px;animation:rotateSlow 3s linear infinite reverse"/>
+
+            <!-- Reactor glow background -->
+            <circle cx="120" cy="105" r="24" fill="url(#reactorGlow)">
+              <animate attributeName="r" values="20;26;20" dur="1.8s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.8;0.4;0.8" dur="1.8s" repeatCount="indefinite"/>
+            </circle>
+
+            <!-- Inner reactor core -->
+            <circle cx="120" cy="105" r="10" fill="#001830" stroke="#00e5ff" stroke-width="1.5" stroke-opacity="0.8"/>
+            <circle cx="120" cy="105" r="6" fill="url(#coreGlow)">
+              <animate attributeName="r" values="5;7;5" dur="1.2s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="120" cy="105" r="3" fill="#ffffff" opacity="0.95"/>
+
+            <!-- Energy nodes on outer ring -->
+            <circle cx="120" cy="69" r="3" fill="#00e5ff" filter="url(#glow)">
+              <animate attributeName="opacity" values="1;0.3;1" dur="1.8s" begin="0s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="149.2" cy="122.5" r="3" fill="#00e5ff" filter="url(#glow)">
+              <animate attributeName="opacity" values="0.3;1;0.3" dur="1.8s" begin="0.6s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="90.8" cy="122.5" r="3" fill="#ff00ff" filter="url(#glow)">
+              <animate attributeName="opacity" values="0.3;1;0.3" dur="1.8s" begin="1.2s" repeatCount="indefinite"/>
+            </circle>
+
+            <!-- ECG Heart Monitor Line -->
+            <g id="ecg-group" clip-path="url(#heartClip)" opacity="0">
+              <!-- Baseline -->
+              <line x1="52" y1="162" x2="188" y2="162" stroke="#00ff88" stroke-width="0.5" stroke-opacity="0.25"/>
+              <!-- Moving scan window effect -->
+              <rect id="ecg-scan-mask" x="52" y="140" width="0" height="30" fill="#00ff88" opacity="0.04">
+                <animate attributeName="width" values="0;136;136;0" dur="2.4s" repeatCount="indefinite"/>
+                <animate attributeName="x" values="52;52;188;188" dur="2.4s" repeatCount="indefinite"/>
+              </rect>
+              <!-- ECG waveform path - PQRST complex repeating -->
+              <path id="ecg-path"
+                d="M52,162 L62,162 L65,162 L67,159 L68,162 L69,162
+                   L73,162 L74,147 L75,177 L76,148 L77,162 L78,162
+                   L82,162 L85,157 L87,158 L89,162 L90,162
+                   L94,162 L97,159 L99,162 L100,162
+                   L104,162 L107,162 L109,162 L110,162
+                   L114,162 L115,147 L116,177 L117,148 L118,162
+                   L122,162 L125,157 L127,158 L129,162
+                   L133,162 L136,159 L137,162 L138,162
+                   L142,162 L143,147 L144,177 L145,148 L146,162
+                   L150,162 L153,157 L155,158 L157,162
+                   L160,162 L163,162 L165,162 L166,162
+                   L170,162 L171,147 L172,177 L173,148 L174,162
+                   L178,162 L181,157 L183,158 L185,162 L188,162"
+                fill="none" stroke="#00ff88" stroke-width="1.6"
+                stroke-linecap="round" stroke-linejoin="round">
+                <animate attributeName="stroke-opacity" values="0;0;0.9;0.9;0" dur="2.4s" repeatCount="indefinite"/>
+              </path>
+              <!-- Glowing dot sweeping across -->
+              <circle r="2.5" fill="#00ff88" filter="url(#glow)">
+                <animateMotion dur="2.4s" repeatCount="indefinite"
+                  path="M52,162 L62,162 L65,162 L67,159 L68,162 L69,162 L73,162 L74,147 L75,177 L76,148 L77,162 L78,162 L82,162 L85,157 L87,158 L89,162 L90,162 L94,162 L97,159 L99,162 L100,162 L104,162 L107,162 L109,162 L110,162 L114,162 L115,147 L116,177 L117,148 L118,162 L122,162 L125,157 L127,158 L129,162 L133,162 L136,159 L137,162 L138,162 L142,162 L143,147 L144,177 L145,148 L146,162 L150,162 L153,157 L155,158 L157,162 L160,162 L163,162 L165,162 L166,162 L170,162 L171,147 L172,177 L173,148 L174,162 L178,162 L181,157 L183,158 L185,162 L188,162"/>
+                <animate attributeName="opacity" values="0;0;1;1;0" dur="2.4s" repeatCount="indefinite"/>
+              </circle>
+            </g>
+
+            <!-- Corner brackets - Tony Stark HUD style -->
+            <path d="M20,20 L20,36 M20,20 L36,20" fill="none" stroke="#00e5ff" stroke-width="1.2" stroke-opacity="0.5"/>
+            <path d="M220,20 L220,36 M220,20 L204,20" fill="none" stroke="#00e5ff" stroke-width="1.2" stroke-opacity="0.5"/>
+            <path d="M20,220 L20,204 M20,220 L36,220" fill="none" stroke="#ff00ff" stroke-width="1.2" stroke-opacity="0.5"/>
+            <path d="M220,220 L220,204 M220,220 L204,220" fill="none" stroke="#ff00ff" stroke-width="1.2" stroke-opacity="0.5"/>
+
+            <!-- Scan line -->
+            <line x1="30" y1="120" x2="210" y2="120" stroke="#00e5ff" stroke-width="0.5" stroke-opacity="0.15">
+              <animate attributeName="y1" values="30;210;30" dur="3s" repeatCount="indefinite"/>
+              <animate attributeName="y2" values="30;210;30" dur="3s" repeatCount="indefinite"/>
+              <animate attributeName="stroke-opacity" values="0.15;0.05;0.15" dur="3s" repeatCount="indefinite"/>
+            </line>
+
+            <!-- Status text -->
+            <text x="120" y="198" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="7" fill="#00e5ff" opacity="0.5" letter-spacing="3">MATRIX OS</text>
+          </svg>
+        </div>
+        <!-- ECG MONITOR LINE - below heart, outside SVG -->
+        <div id="ecg-wrap" style="width:220px;height:32px;margin-top:-8px;position:relative;opacity:0;transition:opacity 0.8s">
+          <svg viewBox="0 0 220 32" width="220" height="32" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <filter id="ecgGlow"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <!-- baseline -->
+            <line x1="0" y1="16" x2="220" y2="16" stroke="#00ff88" stroke-width="0.4" stroke-opacity="0.2"/>
+            <!-- ECG path -->
+            <path d="M0,16 L18,16 L21,16 L23,11 L24,16 L25,16
+                     L30,16 L31,3 L32,29 L33,4 L34,16 L35,16
+                     L40,16 L43,10 L45,11 L47,16 L48,16
+                     L55,16 L56,3 L57,29 L58,4 L59,16
+                     L64,16 L67,10 L69,11 L71,16
+                     L76,16 L79,16 L81,16
+                     L86,16 L87,3 L88,29 L89,4 L90,16
+                     L95,16 L98,10 L100,11 L102,16
+                     L107,16 L110,16 L112,16
+                     L117,16 L118,3 L119,29 L120,4 L121,16
+                     L126,16 L129,10 L131,11 L133,16
+                     L138,16 L141,16 L143,16
+                     L148,16 L149,3 L150,29 L151,4 L152,16
+                     L157,16 L160,10 L162,11 L164,16
+                     L169,16 L172,16 L220,16"
+              fill="none" stroke="#00ff88" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"
+              filter="url(#ecgGlow)" id="ecg-main-path">
+              <animate attributeName="stroke-dasharray" values="0,800;800,0" dur="2.4s" repeatCount="indefinite"/>
+              <animate attributeName="stroke-dashoffset" values="800;0" dur="2.4s" repeatCount="indefinite"/>
+            </path>
+            <!-- scanning dot -->
+            <circle r="3" fill="#00ff88" filter="url(#ecgGlow)" id="ecg-dot">
+              <animateMotion repeatCount="indefinite" dur="2.4s"
+                path="M0,16 L18,16 L21,16 L23,11 L24,16 L25,16 L30,16 L31,3 L32,29 L33,4 L34,16 L35,16 L40,16 L43,10 L45,11 L47,16 L48,16 L55,16 L56,3 L57,29 L58,4 L59,16 L64,16 L67,10 L69,11 L71,16 L76,16 L79,16 L81,16 L86,16 L87,3 L88,29 L89,4 L90,16 L95,16 L98,10 L100,11 L102,16 L107,16 L110,16 L112,16 L117,16 L118,3 L119,29 L120,4 L121,16 L126,16 L129,10 L131,11 L133,16 L138,16 L141,16 L143,16 L148,16 L149,3 L150,29 L151,4 L152,16 L157,16 L160,10 L162,11 L164,16 L169,16 L172,16 L220,16"/>
+            </circle>
+          </svg>
         </div>
         <div id="logo-status">
           <div id="logo-sub">ELITE NEXUS AI</div>
@@ -524,6 +765,16 @@ body{padding-bottom:26px}
       <div class="tile tile-m">
         <div class="th"><span class="th-m" id="v1-title">VAULT • DOCS</span><span class="th-s" id="v1-count">0 NOTES</span></div>
         <div class="vault-body"><canvas class="vault-canvas" id="v1-canvas"></canvas></div>
+      </div>
+      <div class="tile">
+        <div class="th">
+          <span class="th-c">🧠 NEURAL BRAIN</span>
+          <span class="th-s"><span id="brain-total-nodes">0 nodes</span> · <span id="brain-firing" style="color:#00ff8888">0%</span></span>
+        </div>
+        <div class="vault-body" style="position:relative">
+          <canvas id="brain-canvas" style="width:100%;height:100%;display:block;cursor:crosshair"></canvas>
+          <div id="brain-tooltip" style="position:fixed;display:none;background:#0a1020;border:1px solid #00e5ff40;border-radius:3px;padding:4px 8px;font-size:8px;color:#00e5ff;pointer-events:none;z-index:9999;box-shadow:0 0 10px #00e5ff20;font-family:'Courier New',monospace;"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -2283,6 +2534,497 @@ window.switchAgent = function(id, data){
 document.addEventListener('DOMContentLoaded', function(){
   setTimeout(function(){ loadVaultAssign('hermes-ceo'); }, 2000);
 });
+</script>
+
+<script>
+/* ── NEURAL BRAIN VAULT VISUALIZATION ── */
+var _brainData = null;
+var _brainCanvas = null;
+var _brainCtx = null;
+var _brainAnimId = null;
+var _brainView = 'brain'; // brain or graph
+var _brainParticles = [];
+
+var REGION_COLORS = {
+    prefrontal:  '#00e5ff',
+    motor:       '#ffd700',
+    sensory:     '#ffffff',
+    associative: '#00ff88',
+    brainstem:   '#0088ff',
+    reflex:      '#ff3355',
+    concept:     '#ff00ff',
+    cerebellum:  '#aa44ff'
+};
+
+var REGION_POSITIONS = {
+    prefrontal:  {x: 0.5,  y: 0.18},
+    motor:       {x: 0.25, y: 0.32},
+    sensory:     {x: 0.75, y: 0.32},
+    associative: {x: 0.5,  y: 0.45},
+    brainstem:   {x: 0.5,  y: 0.78},
+    reflex:      {x: 0.2,  y: 0.6},
+    concept:     {x: 0.8,  y: 0.6},
+    cerebellum:  {x: 0.35, y: 0.72}
+};
+
+async function loadBrainMap() {
+    try {
+        var r = await fetch('/brain/map');
+        _brainData = await r.json();
+        buildParticles();
+        updateBrainStats();
+    } catch(e) { console.warn('Brain map error:', e); }
+}
+
+function buildParticles() {
+    if(!_brainData || !_brainData.regions) return;
+    _brainParticles = [];
+    var canvas = document.getElementById('brain-canvas');
+    if(!canvas) return;
+    var W = canvas.width, H = canvas.height;
+
+    Object.keys(_brainData.regions).forEach(function(region) {
+        var nodes = _brainData.regions[region];
+        var pos = REGION_POSITIONS[region] || {x:0.5, y:0.5};
+        var color = REGION_COLORS[region] || '#00e5ff';
+        var cx = pos.x * W, cy = pos.y * H;
+        var spread = Math.max(30, Math.min(60, nodes.length * 8));
+
+        // Add region particles
+        var count = Math.max(3, Math.min(20, nodes.length * 3 + 5));
+        for(var i = 0; i < count; i++) {
+            var angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+            var dist = Math.random() * spread;
+            var firing = nodes.length > 0 ?
+                nodes[Math.floor(Math.random() * nodes.length)].firing || 0.3 : 0.1;
+            _brainParticles.push({
+                x: cx + Math.cos(angle) * dist,
+                y: cy + Math.sin(angle) * dist,
+                vx: (Math.random() - 0.5) * 0.3,
+                vy: (Math.random() - 0.5) * 0.3,
+                cx: cx, cy: cy,
+                color: color,
+                region: region,
+                firing: firing,
+                size: 1 + firing * 2.5,
+                alpha: 0.3 + firing * 0.7,
+                pulse: Math.random() * Math.PI * 2
+            });
+        }
+    });
+}
+
+function animateBrain() {
+    var canvas = document.getElementById('brain-canvas');
+    if(!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var W = canvas.width, H = canvas.height;
+
+    ctx.fillStyle = 'rgba(4,7,13,0.15)';
+    ctx.fillRect(0,0,W,H);
+
+    var t = Date.now() / 1000;
+
+    // Draw connection lines between regions
+    if(_brainData && _brainData.regions) {
+        var connections = [
+            ['prefrontal','motor'],['prefrontal','sensory'],
+            ['prefrontal','associative'],['associative','brainstem'],
+            ['motor','cerebellum'],['sensory','concept'],
+            ['reflex','cerebellum']
+        ];
+        connections.forEach(function(pair) {
+            var p1 = REGION_POSITIONS[pair[0]], p2 = REGION_POSITIONS[pair[1]];
+            if(!p1||!p2) return;
+            var n1 = (_brainData.regions[pair[0]]||[]).length;
+            var n2 = (_brainData.regions[pair[1]]||[]).length;
+            if(n1===0 && n2===0) return;
+            ctx.beginPath();
+            ctx.moveTo(p1.x*W, p1.y*H);
+            ctx.lineTo(p2.x*W, p2.y*H);
+            ctx.strokeStyle = 'rgba(0,229,255,0.08)';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+        });
+    }
+
+    // Animate particles
+    _brainParticles.forEach(function(p) {
+        p.pulse += 0.02;
+        var pulseAlpha = p.alpha * (0.7 + 0.3 * Math.sin(p.pulse));
+
+        // Gentle drift back to center
+        p.vx += (p.cx - p.x) * 0.001;
+        p.vy += (p.cy - p.y) * 0.001;
+        p.vx *= 0.98;
+        p.vy *= 0.98;
+        p.x += p.vx;
+        p.y += p.vy;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+        ctx.fillStyle = p.color + Math.floor(pulseAlpha * 255).toString(16).padStart(2,'0');
+        ctx.fill();
+    });
+
+    // Draw region labels
+    if(_brainData && _brainData.regions) {
+        ctx.font = '8px Courier New';
+        Object.keys(REGION_POSITIONS).forEach(function(region) {
+            var nodes = _brainData.regions[region] || [];
+            if(nodes.length === 0) return;
+            var pos = REGION_POSITIONS[region];
+            var color = REGION_COLORS[region];
+            var avgFiring = nodes.reduce(function(s,n){return s+n.firing;},0)/nodes.length;
+            ctx.fillStyle = color + 'aa';
+            ctx.fillText(region.toUpperCase(), pos.x*W - 20, pos.y*H - 14);
+            ctx.fillStyle = color + '66';
+            ctx.fillText(nodes.length+'n · '+(avgFiring*100).toFixed(0)+'%', pos.x*W - 20, pos.y*H - 5);
+        });
+    }
+
+    _brainAnimId = requestAnimationFrame(animateBrain);
+}
+
+function updateBrainStats() {
+    if(!_brainData) return;
+    var totalEl = document.getElementById('brain-total-nodes');
+    var firingEl = document.getElementById('brain-firing');
+    if(totalEl) totalEl.textContent = _brainData.total_nodes + ' nodes';
+    if(firingEl) firingEl.textContent = ((_brainData.avg_firing||0)*100).toFixed(1) + '% firing';
+}
+
+function initBrainCanvas() {
+    var canvas = document.getElementById('brain-canvas');
+    if(canvas) {
+        canvas.addEventListener('mousemove', function(e) {
+            var rect = canvas.getBoundingClientRect();
+            var mx = e.clientX - rect.left;
+            var my = e.clientY - rect.top;
+            var tip = document.getElementById('brain-tooltip');
+            var closest = null, closestDist = 20;
+            _brainParticles.forEach(function(p) {
+                var dx = p.x - mx, dy = p.y - my;
+                var dist = Math.sqrt(dx*dx + dy*dy);
+                if(dist < closestDist) { closestDist = dist; closest = p; }
+            });
+            if(closest && tip) {
+                var region = closest.region.toUpperCase();
+                var color = REGION_COLORS[closest.region] || '#00e5ff';
+                var nodes = (_brainData && _brainData.regions && _brainData.regions[closest.region]) || [];
+                tip.style.display = 'block';
+                tip.style.left = (e.clientX + 12) + 'px';
+                tip.style.top = (e.clientY - 10) + 'px';
+                tip.style.borderColor = color + '60';
+                tip.style.color = color;
+                tip.innerHTML = '<b>' + region + '</b><br>' + nodes.length + ' nodes · ' + (closest.firing*100).toFixed(0) + '% firing';
+            } else if(tip) {
+                tip.style.display = 'none';
+            }
+        });
+        canvas.addEventListener('mouseleave', function() {
+            var tip = document.getElementById('brain-tooltip');
+            if(tip) tip.style.display = 'none';
+        });
+    }
+    var canvas = document.getElementById('brain-canvas');
+    if(!canvas) return;
+    canvas.width = canvas.offsetWidth || 300;
+    canvas.height = canvas.offsetHeight || 200;
+    loadBrainMap();
+    animateBrain();
+    setInterval(loadBrainMap, 30000);
+}
+
+function toggleBrainView() {
+    _brainView = _brainView === 'brain' ? 'graph' : 'brain';
+    var btn = document.getElementById('brain-view-btn');
+    if(btn) btn.textContent = _brainView === 'brain' ? '◈ GRAPH VIEW' : '⬡ BRAIN VIEW';
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(initBrainCanvas, 2500);
+});
+</script>
+
+<style>
+#brain-panel{
+  position:fixed;bottom:32px;right:220px;
+  width:480px;height:340px;
+  background:#04070d;border:1px solid #00e5ff40;
+  border-radius:5px;z-index:4500;display:none;
+  box-shadow:0 0 40px #00e5ff18,0 0 80px #00000088;overflow:hidden;
+}
+#brain-panel.open{display:block}
+#brain-panel-toggle{
+  position:fixed;bottom:32px;right:180px;
+  padding:2px 8px;background:#04070d;
+  border:1px solid #00e5ff25;border-radius:3px 3px 0 0;
+  font-size:7px;color:#00e5ff44;cursor:pointer;z-index:4501;
+  font-family:inherit;letter-spacing:1px;
+}
+#brain-canvas{width:100%;height:100%;display:block;cursor:crosshair}
+#brain-tooltip{
+  position:fixed;display:none;background:#0a1020;
+  border:1px solid #00e5ff40;border-radius:3px;
+  padding:4px 8px;font-size:8px;color:#00e5ff;
+  pointer-events:none;z-index:9999;
+  box-shadow:0 0 10px #00e5ff20;font-family:'Courier New',monospace;
+}
+.brain-hdr{position:absolute;top:0;left:0;right:0;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:3px 6px;background:rgba(4,7,13,0.8);
+  border-bottom:1px solid #00e5ff12;font-size:7px;
+  pointer-events:none;}
+.brain-stat{color:#00e5ff66}
+</style>
+
+<div id="brain-tooltip"></div>
+<div id="brain-panel">
+  <canvas id="brain-canvas"></canvas>
+  <div class="brain-hdr" style="pointer-events:all">
+    <span style="color:#00e5ffcc;font-weight:bold;letter-spacing:2px;font-size:8px">🧠 NEURAL BRAIN VAULT</span>
+    <span class="brain-stat" id="brain-total-nodes" style="font-size:8px;color:#00e5ff88">0 nodes</span>
+    <span class="brain-stat" id="brain-firing">0% firing</span>
+  </div>
+</div>
+
+<script>
+/* ── CYBER HEART ACTIVE STATE ── */
+var _heartActive = false;
+var _origSetBridgeStatus = window.setBridgeStatus;
+
+function updateHeartState(online) {
+    _heartActive = online;
+    var heart = document.getElementById('cyber-heart');
+    var heartPath = document.getElementById('heart-path');
+    var hbeatLine = document.getElementById('hbeat-line');
+    if(!heart) return;
+    var ecgWrap = document.getElementById('ecg-wrap');
+    if(online) {
+        heart.style.filter = 'drop-shadow(0 0 20px #ff00ff) drop-shadow(0 0 40px #00e5ff44)';
+        if(heartPath) heartPath.setAttribute('stroke','#ff00ff');
+        if(ecgWrap) ecgWrap.style.opacity = '1';
+    } else {
+        heart.style.filter = 'drop-shadow(0 0 8px #00e5ff44)';
+        if(heartPath) heartPath.setAttribute('stroke','#00e5ff');
+        if(ecgWrap) ecgWrap.style.opacity = '0';
+    }
+}
+
+// Hook into bridge status changes
+var _origSetBridge = typeof setBridgeStatus !== 'undefined' ? setBridgeStatus : null;
+document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(function(){
+        // Watch bridge-dot for color changes
+        var observer = new MutationObserver(function(muts) {
+            muts.forEach(function(m) {
+                if(m.type === 'attributes') {
+                    var dot = document.getElementById('bridge-dot');
+                    var online = dot && dot.style.background && dot.style.background.indexOf('danger') === -1;
+                    updateHeartState(online);
+                }
+            });
+        });
+        var dot = document.getElementById('bridge-dot');
+        if(dot) observer.observe(dot, {attributes:true, attributeFilter:['style']});
+    }, 1000);
+});
+</script>
+
+<script>
+/* ── GLOBAL FUNCTION EXPOSURE ── */
+document.addEventListener('DOMContentLoaded', function(){
+  setTimeout(function(){
+    // Expose all nav button functions globally
+    if(typeof toggleIngestor === 'function') window.toggleIngestor = toggleIngestor;
+    if(typeof generateDailySummary === 'function') window.generateDailySummary = generateDailySummary;
+    if(typeof cfoBrief === 'function') window.cfoBrief = cfoBrief;
+    if(typeof loadVaultFiles === 'function') window.loadVaultFiles = loadVaultFiles;
+    if(typeof loadAgentRegistry === 'function') window.loadAgentRegistry = loadAgentRegistry;
+  }, 1500);
+});
+
+// Safe wrappers that wait for functions to be ready
+function navToggleIngestor(){
+  var el = document.getElementById('ingestor-zone');
+  if(el){ el.classList.toggle('open'); if(el.classList.contains('open')){ el.style.cssText='position:fixed;top:100px;left:50%;transform:translateX(-50%);width:440px;background:#0a0d18;border:1px solid #ff00ff50;border-radius:5px;z-index:99999;display:block;box-shadow:0 0 30px #ff00ff20,inset 0 0 20px #00000040;'; } else { el.style.display='none'; } }
+}
+function navCfoBrief(){
+  if(window.cfoBrief){ window.cfoBrief(); return; }
+  // Fallback direct call
+  if(typeof addMsg==='function') addMsg('system','⧗ CFO AGENT generating factory brief...');
+  fetch('/factory/cfo-brief',{method:'POST'}).then(function(r){return r.json();}).then(function(d){
+    if(d.ok&&typeof addMsg==='function') addMsg('assistant','## CFO FACTORY BRIEF\n\n'+d.brief);
+  }).catch(function(e){ if(typeof addMsg==='function') addMsg('system','x '+e.message); });
+}
+function navMorningBrief(){
+  if(typeof addMsg==='function') addMsg('system','⧗ Generating morning brief...');
+  fetch('/briefing/morning',{method:'POST'}).then(function(r){return r.json();}).then(function(d){
+    if(typeof addMsg==='function') addMsg('assistant', d.brief||d.content||JSON.stringify(d).substring(0,500));
+  }).catch(function(e){ if(typeof addMsg==='function') addMsg('system','x '+e.message); });
+}
+function navDailySummary(){
+  if(window.generateDailySummary){ window.generateDailySummary(); return; }
+  if(typeof addMsg==='function') addMsg('system','⧗ Generating daily vault summary...');
+  fetch('/vault/daily-summary',{method:'POST'}).then(function(r){return r.json();}).then(function(d){
+    if(d.ok&&typeof addMsg==='function') addMsg('system','✅ Daily summary saved → '+d.path);
+  }).catch(function(e){ if(typeof addMsg==='function') addMsg('system','x '+e.message); });
+}
+function navVaultSync(){
+  if(typeof loadVaultFiles==='function'){ loadVaultFiles(); }
+  if(typeof addMsg==='function') addMsg('system','⧗ Syncing vaults...');
+  fetch('/vault/files').then(function(r){return r.json();}).then(function(d){
+    if(typeof addMsg==='function') addMsg('system','✅ Vault sync: '+d.total+' notes loaded');
+  });
+}
+function navFactoryStatus(){
+  fetch('/factory/status').then(function(r){return r.json();}).then(function(d){
+    if(!d.factories||typeof addMsg!=='function') return;
+    var msg = '## FACTORY STATUS\n';
+    d.factories.forEach(function(f){ msg += '- '+f.name+' ('+f.status+'): $'+f.revenue_month.toFixed(2)+'/mo\n'; });
+    msg += '\n**Total: $'+d.totals.month.toFixed(2)+' / $'+d.totals.goal.toFixed(2)+' goal ('+d.totals.progress_pct+'%)**';
+    addMsg('assistant', msg);
+  });
+}
+</script>
+
+<script>
+/* ── ECG HEART MONITOR ANIMATION ── */
+(function(){
+  var ECG_ONLINE = false;
+  var ecgCanvas, ecgCtx;
+  var ecgOffset = 0;
+  var ecgAnimId = null;
+
+  // ECG waveform pattern - one PQRST complex
+  // Values are Y offsets from center (0 = center, negative = up)
+  var ECG_PATTERN = [
+    0,0,0,0,0,0,0,0,           // flat baseline
+    0,1,-1,0,0,0,0,0,           // P wave (small bump)
+    0,0,0,0,0,0,0,0,           // PR segment
+    0,2,-14,18,-12,2,0,0,0,    // QRS complex (sharp spike)
+    0,0,0,0,0,0,                // ST segment
+    0,-2,-4,-4,-3,-2,0,0,0,0, // T wave (rounded bump)
+    0,0,0,0,0,0,0,0,0,0,0,0,  // TP interval flat
+    0,0,0,0,0,0,0,0,0,0,0,0   // more flat
+  ];
+
+  var patternLen = ECG_PATTERN.length;
+  var ecgBuffer = [];
+  var bufSize = 136;
+
+  function initECG(){
+    ecgCanvas = document.getElementById('ecg-canvas');
+    if(!ecgCanvas) return;
+    ecgCtx = ecgCanvas.getContext('2d');
+    // Pre-fill buffer with flat line
+    for(var i=0;i<bufSize;i++) ecgBuffer.push(0);
+    drawECG();
+  }
+
+  function drawECG(){
+    if(!ecgCtx || !ecgCanvas) return;
+    var W = ecgCanvas.width;
+    var H = ecgCanvas.height;
+    var midY = H / 2;
+    var amplitude = 11;
+
+    ecgCtx.clearRect(0,0,W,H);
+
+    if(!ECG_ONLINE){
+      // Flat dim line when offline
+      ecgCtx.beginPath();
+      ecgCtx.moveTo(0, midY);
+      ecgCtx.lineTo(W, midY);
+      ecgCtx.strokeStyle = 'rgba(0,229,255,0.15)';
+      ecgCtx.lineWidth = 0.8;
+      ecgCtx.stroke();
+      ecgAnimId = requestAnimationFrame(drawECG);
+      return;
+    }
+
+    // Advance buffer
+    ecgOffset++;
+    var newVal = ECG_PATTERN[ecgOffset % patternLen];
+    ecgBuffer.push(newVal);
+    if(ecgBuffer.length > bufSize) ecgBuffer.shift();
+
+    // Draw trailing glow
+    ecgCtx.shadowBlur = 6;
+    ecgCtx.shadowColor = '#00ff88';
+
+    ecgCtx.beginPath();
+    for(var x=0; x<ecgBuffer.length; x++){
+      var y = midY - (ecgBuffer[x] * amplitude / 18);
+      var alpha = 0.2 + (x / ecgBuffer.length) * 0.8;
+      if(x === 0){
+        ecgCtx.moveTo(x, y);
+      } else {
+        ecgCtx.lineTo(x, y);
+      }
+    }
+    // Color gradient - older parts dimmer
+    var grad = ecgCtx.createLinearGradient(0,0,W,0);
+    grad.addColorStop(0,'rgba(0,255,136,0.05)');
+    grad.addColorStop(0.6,'rgba(0,255,136,0.4)');
+    grad.addColorStop(1,'rgba(0,255,136,0.95)');
+    ecgCtx.strokeStyle = grad;
+    ecgCtx.lineWidth = 1.5;
+    ecgCtx.lineJoin = 'round';
+    ecgCtx.lineCap = 'round';
+    ecgCtx.stroke();
+
+    // Bright dot at leading edge
+    var lastY = midY - (ecgBuffer[ecgBuffer.length-1] * amplitude / 18);
+    ecgCtx.beginPath();
+    ecgCtx.arc(W-1, lastY, 2, 0, Math.PI*2);
+    ecgCtx.fillStyle = '#00ff88';
+    ecgCtx.shadowBlur = 10;
+    ecgCtx.shadowColor = '#00ff88';
+    ecgCtx.fill();
+    ecgCtx.shadowBlur = 0;
+
+    ecgAnimId = requestAnimationFrame(drawECG);
+  }
+
+  function setECGOnline(online){
+    ECG_ONLINE = online;
+    if(ecgCanvas){
+      ecgCanvas.style.opacity = online ? '1' : '0.2';
+    }
+  }
+
+  // Watch bridge status dot for online/offline
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(function(){
+      initECG();
+      var dot = document.getElementById('bridge-dot');
+      if(dot){
+        var observer = new MutationObserver(function(){
+          var isOnline = dot.style.background && dot.style.background.indexOf('danger') === -1;
+          setECGOnline(isOnline);
+          updateHeartState(isOnline);
+        });
+        observer.observe(dot, {attributes:true, attributeFilter:['style']});
+      }
+    }, 2500);
+  });
+
+  window.setECGOnline = setECGOnline;
+})();
+</script>
+
+<script>
+setTimeout(function(){
+  setInterval(function(){
+    var dot = document.getElementById('bridge-dot');
+    var online = dot && dot.style.background && dot.style.background.indexOf('danger') === -1;
+    var ecg = document.getElementById('ecg-wrap');
+    if(ecg) ecg.style.opacity = online ? '1' : '0';
+    if(typeof updateHeartState === 'function') updateHeartState(online);
+  }, 2000);
+}, 3000);
 </script>
 </body>
 </html>

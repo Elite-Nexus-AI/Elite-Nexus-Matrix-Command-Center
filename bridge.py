@@ -1001,6 +1001,44 @@ Provide your analysis in this exact format:
 
 
 
+
+# -- Neural Brain Vault Visualization
+@app.get('/brain/map')
+def brain_map(_=Depends(require_auth)):
+    import datetime as _dt4
+    try:
+        knowledge_files = _vault_list_files(VAULT_KNOWLEDGE)
+        production_files = _vault_list_files(VAULT_PRODUCTION)
+        now = _time.time()
+        day = 86400
+        def firing(f):
+            age = now - f.get('modified', now)
+            if age < day: return round(0.8 + (0.2 * (1 - age/day)), 2)
+            if age < day*7: return round(0.3 + (0.5 * (1 - age/(day*7))), 2)
+            return round(0.05 + (0.25 * max(0, 1 - age/(day*30))), 2)
+        def region(f, vault):
+            name = f.get('name','').lower()
+            path = f.get('path','').lower()
+            if 'daily' in path: return 'motor'
+            if 'knowledge' in path: return 'prefrontal'
+            if 'skill' in path: return 'associative'
+            if 'project' in path or vault=='production': return 'sensory'
+            if 'cfo' in path or 'factory' in path: return 'brainstem'
+            if 'security' in path: return 'reflex'
+            return 'concept'
+        regions = {'prefrontal':[],'motor':[],'sensory':[],'associative':[],'brainstem':[],'reflex':[],'concept':[],'cerebellum':[]}
+        for f in knowledge_files:
+            r = region(f, 'knowledge')
+            regions[r].append({'name':f['name'],'firing':firing(f),'vault':'knowledge','path':f['path']})
+        for f in production_files:
+            r = region(f, 'production')
+            regions[r].append({'name':f['name'],'firing':firing(f),'vault':'production','path':f['path']})
+        total_nodes = len(knowledge_files) + len(production_files)
+        avg_firing = round(sum(firing(f) for f in knowledge_files+production_files) / max(1,total_nodes), 3)
+        return {'regions':regions,'total_nodes':total_nodes,'avg_firing':avg_firing,'ts':now}
+    except Exception as e:
+        return {'regions':{},'error':str(e)}
+
 # -- Wake Word Endpoint
 class WakeReq(BaseModel):
     word: str
