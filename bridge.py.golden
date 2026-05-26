@@ -1000,6 +1000,29 @@ Provide your analysis in this exact format:
 
 
 
+
+# -- Wake Word Endpoint
+class WakeReq(BaseModel):
+    word: str
+    ts: float = 0.0
+
+@app.post('/wake/trigger')
+def wake_trigger(req: WakeReq, _=Depends(require_auth)):
+    print(f'WAKE WORD: {req.word}')
+    return {'ok': True, 'word': req.word, 'action': 'focus_hud'}
+
+@app.get('/wake/status')
+def wake_status(_=Depends(require_auth)):
+    import subprocess
+    pid_file = '/tmp/wake_word.pid'
+    running = False
+    try:
+        pid = open(pid_file).read().strip()
+        subprocess.check_output(['kill', '-0', pid])
+        running = True
+    except: pass
+    return {'running': running}
+
 # -- Vault Assignment System
 VAULT_ASSIGNMENTS_FILE = Path.home() / '.hermes' / 'vault_assignments.json'
 
