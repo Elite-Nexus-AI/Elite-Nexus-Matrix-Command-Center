@@ -60,3 +60,5 @@ wpctl set-default 54 2>/dev/null || true
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 sudo docker stop $(sudo docker ps -q --filter 'publish=8880') 2>/dev/null
 bash $DIR/start_vllm.sh &
+python3 wake_word.py >> /tmp/wake_word.log 2>&1 &
+python3 global_hotkey.py >> /tmp/hotkey.log 2>&1 &
