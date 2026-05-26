@@ -338,6 +338,191 @@ def spawn_agent(req: AgentSpawn, _=Depends(require_auth)):
 
 
 
+
+# ── Obsidian Bi-Directional Sync ──────────────────────────────────────────────
+VAULT_KNOWLEDGE = Path("/mnt/data/New-matrix-vault")
+VAULT_PRODUCTION = Path("/mnt/data/Matrix-Production")
+
+def _vault_list_files(vault_path: Path, max_files: int = 100):
+    """Recursively list all .md files in a vault."""
+    files = []
+    if not vault_path.exists():
+        return files
+    for f in sorted(vault_path.rglob("*.md")):
+        rel = f.relative_to(vault_path)
+        stat = f.stat()
+        files.append({
+            "name": f.stem,
+            "path": str(rel),
+            "full_path": str(f),
+            "size": stat.st_size,
+            "modified": stat.st_mtime,
+            "vault": vault_path.name
+        })
+        if len(files) >= max_files:
+            break
+    return files
+
+def _vault_search(query: str, vault_path: Path, max_results: int = 20):
+    """Simple text search across vault .md files."""
+    results = []
+    query_lower = query.lower()
+    if not vault_path.exists():
+        return results
+    for f in vault_path.rglob("*.md"):
+        try:
+            text = f.read_text(errors="ignore")
+            if query_lower in text.lower():
+                # Get snippet around match
+                idx = text.lower().find(query_lower)
+                start = max(0, idx - 100)
+                end = min(len(text), idx + 200)
+                snippet = text[start:end].strip()
+                rel = f.relative_to(vault_path)
+                results.append({
+                    "name": f.stem,
+                    "path": str(rel),
+                    "vault": vault_path.name,
+                    "snippet": snippet
+                })
+                if len(results) >= max_results:
+                    break
+        except:
+            pass
+    return results
+
+@app.get("/vault/files")
+def vault_files(_=Depends(require_auth)):
+    knowledge = _vault_list_files(VAULT_KNOWLEDGE)
+    production = _vault_list_files(VAULT_PRODUCTION)
+    return {
+        "knowledge": {
+            "path": str(VAULT_KNOWLEDGE),
+            "count": len(knowledge),
+            "files": knowledge
+        },
+        "production": {
+            "path": str(VAULT_PRODUCTION),
+            "count": len(production),
+            "files": production
+        },
+        "total": len(knowledge) + len(production)
+    }
+
+class VaultReadReq(BaseModel):
+    path: str
+    vault: str = "knowledge"  # knowledge or production
+
+@app.post("/vault/read")
+def vault_read(req: VaultReadReq, _=Depends(require_auth)):
+    base = VAULT_KNOWLEDGE if req.vault == "knowledge" else VAULT_PRODUCTION
+    target = base / req.path
+    # Safety: must stay within vault
+    try:
+        target.resolve().relative_to(base.resolve())
+    except ValueError:
+        return {"ok": False, "error": "Path outside vault"}
+    if not target.exists():
+        return {"ok": False, "error": f"File not found: {req.path}"}
+    try:
+        content_text = target.read_text(errors="ignore")
+        return {"ok": True, "content": content_text, "path": req.path, "vault": req.vault}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+class VaultWriteReq(BaseModel):
+    path: str
+    content: str
+    vault: str = "knowledge"
+    append: bool = False
+
+@app.post("/vault/write")
+def vault_write(req: VaultWriteReq, _=Depends(require_auth)):
+    base = VAULT_KNOWLEDGE if req.vault == "knowledge" else VAULT_PRODUCTION
+    target = base / req.path
+    try:
+        target.resolve().relative_to(base.resolve())
+    except ValueError:
+        return {"ok": False, "error": "Path outside vault"}
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if req.append and target.exists():
+            existing = target.read_text(errors="ignore")
+            target.write_text(existing + "\n" + req.content)
+        else:
+            target.write_text(req.content)
+        return {"ok": True, "path": str(target), "vault": req.vault, "size": target.stat().st_size}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+class VaultSearchReq(BaseModel):
+    query: str
+    vault: str = "both"
+
+@app.post("/vault/search")
+def vault_search(req: VaultSearchReq, _=Depends(require_auth)):
+    results = []
+    if req.vault in ("knowledge", "both"):
+        results.extend(_vault_search(req.query, VAULT_KNOWLEDGE))
+    if req.vault in ("production", "both"):
+        results.extend(_vault_search(req.query, VAULT_PRODUCTION))
+    return {"query": req.query, "results": results, "count": len(results)}
+
+@app.post("/vault/daily-summary")
+async def vault_daily_summary(_=Depends(require_auth)):
+    import datetime as _dt2
+    import requests as _req2
+    today = _dt2.date.today().strftime("%Y-%m-%d")
+    weekday = _dt2.date.today().strftime("%A")
+
+    # Gather context: recent files
+    recent_files = []
+    for vault in [VAULT_KNOWLEDGE, VAULT_PRODUCTION]:
+        if vault.exists():
+            files = sorted(vault.rglob("*.md"), key=lambda f: f.stat().st_mtime, reverse=True)
+            for f in files[:5]:
+                try:
+                    text = f.read_text(errors="ignore")[:300]
+                    recent_files.append(f"- {f.stem}: {text[:150]}")
+                except:
+                    pass
+
+    context = "\n".join(recent_files[:8]) if recent_files else "No recent files found."
+
+    prompt = f"""You are the Matrix OS Teacher Agent. Generate a concise daily summary note for {weekday}, {today}.
+
+Recent vault activity:
+{context}
+
+Write a clean Obsidian markdown daily note with:
+1. A brief status update on the Matrix OS project
+2. Key knowledge areas active today
+3. 3 suggested focus items for tomorrow
+4. Any patterns or insights from recent work
+
+Keep it under 300 words. Use Obsidian markdown format."""
+
+    try:
+        payload = {
+            "model": "qwen2.5-72b",
+            "messages": [{"role": "user", "content": prompt}],
+            "stream": False,
+            "temperature": 0.7,
+            "max_tokens": 600
+        }
+        r = _req2.post("http://localhost:8000/v1/chat/completions", json=payload, timeout=60)
+        r.raise_for_status()
+        summary = r.json()["choices"][0]["message"]["content"]
+
+        # Save to vault
+        note_path = VAULT_KNOWLEDGE / "daily" / f"{today}.md"
+        note_path.parent.mkdir(parents=True, exist_ok=True)
+        note_path.write_text(f"# Daily Summary — {today}\n\n{summary}")
+
+        return {"ok": True, "date": today, "path": str(note_path), "summary": summary}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
 # ── Project Scaffolding & Council Box ─────────────────────────────────────────
 import datetime as _dt
 

@@ -1940,5 +1940,110 @@ function councilToProject(){
   openProjectModal();
 }
 </script>
+
+<script>
+/* ── VAULT SYNC ── */
+async function loadVaultFiles() {
+  try {
+    const r = await fetch('/vault/files');
+    const d = await r.json();
+    const kPanel = document.getElementById('vault-knowledge-list');
+    const pPanel = document.getElementById('vault-production-list');
+    const kCount = document.getElementById('vault-k-count');
+    const pCount = document.getElementById('vault-p-count');
+
+    if (kCount) kCount.textContent = d.knowledge.count + ' notes';
+    if (pCount) pCount.textContent = d.production.count + ' notes';
+
+    if (kPanel) {
+      kPanel.innerHTML = '';
+      (d.knowledge.files || []).slice(0, 8).forEach(f => {
+        const div = document.createElement('div');
+        div.style.cssText = 'padding:2px 0;border-bottom:1px solid #00e5ff08;font-size:8px;color:#00e5ffaa;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+        div.textContent = '📄 ' + f.name;
+        div.title = f.path;
+        div.onclick = () => readVaultNote(f.path, 'knowledge');
+        kPanel.appendChild(div);
+      });
+    }
+    if (pPanel) {
+      pPanel.innerHTML = '';
+      (d.production.files || []).slice(0, 8).forEach(f => {
+        const div = document.createElement('div');
+        div.style.cssText = 'padding:2px 0;border-bottom:1px solid #ff00ff08;font-size:8px;color:#ff00ffaa;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+        div.textContent = '📄 ' + f.name;
+        div.title = f.path;
+        div.onclick = () => readVaultNote(f.path, 'production');
+        pPanel.appendChild(div);
+      });
+    }
+  } catch(e) { console.warn('Vault load error:', e); }
+}
+
+async function readVaultNote(path, vault) {
+  try {
+    const r = await fetch('/vault/read', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({path, vault})
+    });
+    const d = await r.json();
+    if (d.ok) {
+      const el = document.getElementById('vault-note-viewer');
+      if (el) {
+        el.style.display = 'block';
+        el.textContent = d.content;
+        document.getElementById('vault-note-title').textContent = path;
+      } else {
+        alert('📄 ' + path + '\n\n' + d.content.substring(0, 500));
+      }
+    }
+  } catch(e) {}
+}
+
+async function searchVault(query) {
+  if (!query) return;
+  const r = await fetch('/vault/search', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({query, vault:'both'})
+  });
+  const d = await r.json();
+  if (typeof addMsg === 'function') {
+    if (d.count === 0) {
+      addMsg('system', '🔍 No vault results for: ' + query);
+    } else {
+      const hits = d.results.slice(0,3).map(r => '📄 ' + r.name + ': ' + r.snippet.substring(0,80)).join('\n');
+      addMsg('system', '🔍 Vault search: ' + d.count + ' results\n' + hits);
+    }
+  }
+}
+
+async function generateDailySummary() {
+  if (typeof addMsg === 'function') addMsg('system', '⧗ Generating daily summary...');
+  try {
+    const r = await fetch('/vault/daily-summary', {method:'POST'});
+    const d = await r.json();
+    if (d.ok && typeof addMsg === 'function') {
+      addMsg('system', '✅ Daily summary saved → ' + d.path);
+      loadVaultFiles();
+    }
+  } catch(e) {}
+}
+
+// Load on startup and refresh every 60s
+document.addEventListener('DOMContentLoaded', () => {
+  loadVaultFiles();
+  setInterval(loadVaultFiles, 60000);
+});
+
+// Add /vault slash command
+const _origHandleSlash = window.handleSlash;
+window.handleVaultCmd = function(arg) {
+  if (!arg) { loadVaultFiles(); return; }
+  if (arg.startsWith('search ')) searchVault(arg.replace('search ',''));
+  else if (arg === 'summary') generateDailySummary();
+  else if (arg === 'sync') loadVaultFiles();
+};
+</script>
 </body>
 </html>
