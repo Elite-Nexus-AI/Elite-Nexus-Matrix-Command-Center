@@ -229,6 +229,34 @@ body{
 .briefing-btn{background:oklch(0.15 0.1 220/0.5);border:1px solid var(--cyan);color:var(--cyan);padding:6px 14px;border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px;transition:all 0.2s;}
 .briefing-btn:hover{background:oklch(0.25 0.15 220/0.5);box-shadow:0 0 8px var(--cyan);}
 
+
+/* ── TELEMETRY FOOTER ─────────────────────────────────────────────── */
+#tel-bar{
+  position:fixed;bottom:0;left:0;right:0;height:26px;
+  background:#05080f;border-top:1px solid #00e5ff22;
+  display:flex;align-items:center;gap:0;z-index:9999;
+  font-family:'Courier New',monospace;font-size:9px;
+  user-select:none;
+}
+.tel-seg{
+  display:flex;align-items:center;gap:5px;padding:0 12px;
+  border-right:1px solid #00e5ff12;height:100%;
+}
+.tel-label{color:#ffffff25;font-size:7px;letter-spacing:.5px}
+.tel-val{font-weight:bold}
+.tel-val.free{color:#00ff88}
+.tel-val.paid{color:#ffd700}
+.tel-val.warn{color:#ff3333;animation:telwarn 1s ease-in-out infinite}
+@keyframes telwarn{0%,100%{opacity:1}50%{opacity:.4}}
+.tel-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.tel-dot.free{background:#00ff88;box-shadow:0 0 4px #00ff88}
+.tel-dot.paid{background:#ffd700;box-shadow:0 0 4px #ffd700}
+.tel-spacer{flex:1}
+#tel-model-badge{
+  font-size:7px;padding:1px 6px;border-radius:2px;border:1px solid;
+  letter-spacing:.5px;margin-right:4px;
+}
+body{padding-bottom:26px}
 </style>
 </head>
 <body>
@@ -1497,6 +1525,124 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(renderFactoryPanel, 30000);
 });
 
+</script>
+
+<!-- ── TELEMETRY FOOTER ── -->
+<div id="tel-bar">
+  <div class="tel-seg">
+    <div class="tel-dot free" id="tel-dot"></div>
+    <span class="tel-label">MODEL</span>
+    <span id="tel-model-badge" style="border-color:#00ff8830;color:#00ff88">vLLM FREE</span>
+  </div>
+  <div class="tel-seg">
+    <span class="tel-label">TOKENS</span>
+    <span class="tel-val" id="tel-tokens" style="color:#00e5ff">0</span>
+  </div>
+  <div class="tel-seg">
+    <span class="tel-label">MSG COST</span>
+    <span class="tel-val free" id="tel-msg-cost">$0.000000</span>
+  </div>
+  <div class="tel-seg">
+    <span class="tel-label">TODAY PAID</span>
+    <span class="tel-val free" id="tel-today-paid">$0.0000</span>
+  </div>
+  <div class="tel-seg">
+    <span class="tel-label">LOCAL SAVED</span>
+    <span class="tel-val" style="color:#00e5ff" id="tel-saved">$0.0000</span>
+  </div>
+  <div class="tel-seg">
+    <span class="tel-label">LIMIT</span>
+    <span class="tel-val free" id="tel-limit">$5.00 / day</span>
+  </div>
+  <div class="tel-spacer"></div>
+  <div class="tel-seg" style="border-right:none;border-left:1px solid #00e5ff12">
+    <span class="tel-label">DAILY BUDGET</span>
+    <div style="width:80px;height:4px;background:#ffffff0a;border-radius:2px;overflow:hidden;margin-left:4px">
+      <div id="tel-budget-bar" style="height:100%;background:#00ff88;border-radius:2px;width:0%;transition:width .5s"></div>
+    </div>
+    <span class="tel-val" id="tel-budget-pct" style="color:#00ff88;font-size:7px;margin-left:4px">0%</span>
+    <button onclick="resetTelemetry()" style="margin-left:8px;padding:1px 5px;background:transparent;border:1px solid #ffffff12;color:#ffffff33;font-size:6px;cursor:pointer;border-radius:2px;font-family:inherit">RESET</button>
+  </div>
+</div>
+
+<script>
+/* ── TELEMETRY LOGIC ── */
+const MODEL_COLORS = {
+  free: {dot:'free', badge:'border-color:#00ff8830;color:#00ff88'},
+  paid: {dot:'paid', badge:'border-color:#ffd70030;color:#ffd700'}
+};
+
+function updateTelBar(data) {
+  if (!data) return;
+  const tokens = data.tokens || 0;
+  const cost   = data.cost   || 0;
+  const model  = data.model  || '';
+  const isFree = cost === 0;
+
+  // msg cost
+  document.getElementById('tel-tokens').textContent = tokens.toLocaleString();
+  document.getElementById('tel-msg-cost').textContent = '$' + cost.toFixed(6);
+  document.getElementById('tel-msg-cost').className = 'tel-val ' + (isFree ? 'free' : 'paid');
+
+  // model badge
+  const badge = document.getElementById('tel-model-badge');
+  badge.textContent = isFree ? model.toUpperCase() + ' FREE' : model.toUpperCase();
+  badge.style.cssText = isFree
+    ? 'border-color:#00ff8830;color:#00ff88;font-size:7px;padding:1px 6px;border-radius:2px;border:1px solid;letter-spacing:.5px;margin-right:4px'
+    : 'border-color:#ffd70030;color:#ffd700;font-size:7px;padding:1px 6px;border-radius:2px;border:1px solid;letter-spacing:.5px;margin-right:4px';
+
+  // dot
+  const dot = document.getElementById('tel-dot');
+  dot.className = 'tel-dot ' + (isFree ? 'free' : 'paid');
+
+  // refresh session totals
+  fetchTelSession();
+}
+
+function fetchTelSession() {
+  fetch('/telemetry/session').then(r => r.json()).then(d => {
+    const paid = d.total_cost_usd || 0;
+    const saved = d.local_savings_usd || 0;
+    const limit = d.daily_limit_usd || 5.0;
+    const pct = Math.min(100, Math.round((paid / limit) * 100));
+
+    document.getElementById('tel-today-paid').textContent = '$' + paid.toFixed(4);
+    document.getElementById('tel-today-paid').className = 'tel-val ' + (paid > 0 ? 'paid' : 'free');
+    document.getElementById('tel-saved').textContent = '$' + saved.toFixed(4);
+
+    const bar = document.getElementById('tel-budget-bar');
+    bar.style.width = pct + '%';
+    bar.style.background = pct > 80 ? '#ff3333' : pct > 50 ? '#ffd700' : '#00ff88';
+
+    const pctEl = document.getElementById('tel-budget-pct');
+    pctEl.textContent = pct + '%';
+    pctEl.style.color = pct > 80 ? '#ff3333' : pct > 50 ? '#ffd700' : '#00ff88';
+
+    if (paid >= limit) {
+      document.getElementById('tel-limit').className = 'tel-val warn';
+      document.getElementById('tel-limit').textContent = '⚠ LIMIT HIT';
+    } else {
+      document.getElementById('tel-limit').className = 'tel-val free';
+      document.getElementById('tel-limit').textContent = '$' + d.limit_remaining_usd.toFixed(2) + ' remaining';
+    }
+  }).catch(() => {});
+}
+
+function resetTelemetry() {
+  fetch('/telemetry/reset', {method:'POST'}).then(() => fetchTelSession());
+}
+
+// Hook into existing SSE done events
+const _origAddMsg = typeof addMsg !== 'undefined' ? addMsg : null;
+document.addEventListener('DOMContentLoaded', () => {
+  // Patch the global SSE handler to intercept done events
+  const origEvtSrc = window.EventSource;
+  fetchTelSession();
+  setInterval(fetchTelSession, 30000);
+});
+
+// Export so SSE handler can call it
+window.updateTelBar = updateTelBar;
 </script>
 </body>
 </html>

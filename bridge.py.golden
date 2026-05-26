@@ -36,6 +36,67 @@ try:
 except Exception:
     pass
 
+# ── Financial Telemetry ────────────────────────────────────────────────────────
+import sqlite3, time as _time
+_TEL_DB = os.path.expanduser("~/.hermes/telemetry.db")
+
+# Cost per 1k tokens (input+output blended estimate)
+_MODEL_COSTS = {
+    "qwen2.5-72b":             0.0,      # local vLLM - free
+    "qwen3.5:27b":             0.0,      # local Ollama - free
+    "qwen3.5:latest":          0.0,
+    "claude-code":             0.0,      # MAX subscription - free
+    "anthropic/claude-sonnet-4": 0.003,
+    "anthropic/claude-opus-4":   0.015,
+}
+
+def _tel_init():
+    con = sqlite3.connect(_TEL_DB)
+    con.execute("""CREATE TABLE IF NOT EXISTS ledger (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts REAL, model TEXT, provider TEXT,
+        tokens INTEGER, cost_usd REAL, persona TEXT
+    )""")
+    con.commit(); con.close()
+
+def _tel_log(model: str, provider: str, tokens: int, persona: str):
+    rate = _MODEL_COSTS.get(model, 0.003)
+    cost = round((tokens / 1000) * rate, 6)
+    con = sqlite3.connect(_TEL_DB)
+    con.execute("INSERT INTO ledger(ts,model,provider,tokens,cost_usd,persona) VALUES(?,?,?,?,?,?)",
+                (_time.time(), model, provider, tokens, cost, persona))
+    con.commit(); con.close()
+    return cost
+
+def _tel_session():
+    try:
+        con = sqlite3.connect(_TEL_DB)
+        today_start = _time.time() - (_time.time() % 86400)
+        rows = con.execute(
+            "SELECT model,provider,SUM(tokens),SUM(cost_usd) FROM ledger WHERE ts>=? GROUP BY model,provider",
+            (today_start,)
+        ).fetchall()
+        total_tokens = con.execute("SELECT SUM(tokens) FROM ledger WHERE ts>=?", (today_start,)).fetchone()[0] or 0
+        total_cost   = con.execute("SELECT SUM(cost_usd) FROM ledger WHERE ts>=?", (today_start,)).fetchone()[0] or 0.0
+        total_free   = con.execute("SELECT SUM(cost_usd) FROM ledger WHERE ts>=? AND cost_usd=0", (today_start,)).fetchone()[0] or 0.0
+        # What it would have cost at Sonnet 4 rates if all local
+        local_tokens = con.execute("SELECT SUM(tokens) FROM ledger WHERE ts>=? AND cost_usd=0", (today_start,)).fetchone()[0] or 0
+        savings = round((local_tokens / 1000) * 0.003, 4)
+        con.close()
+        return {
+            "total_tokens": total_tokens,
+            "total_cost_usd": round(total_cost, 4),
+            "local_savings_usd": savings,
+            "daily_limit_usd": 5.0,
+            "limit_remaining_usd": round(max(0, 5.0 - total_cost), 4),
+            "by_model": [{"model": r[0], "provider": r[1], "tokens": r[2], "cost": round(r[3],4)} for r in rows]
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+_tel_init()
+
+
 from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse, FileResponse
@@ -275,6 +336,23 @@ def spawn_agent(req: AgentSpawn, _=Depends(require_auth)):
     _write_json(AGENTS_FILE, agents)
     return {"ok": True, "action": "spawned"}
 
+
+# ── Telemetry endpoints ────────────────────────────────────────────────────────
+@app.get("/telemetry/session")
+def telemetry_session(_=Depends(require_auth)):
+    return _tel_session()
+
+@app.post("/telemetry/reset")
+def telemetry_reset(_=Depends(require_auth)):
+    try:
+        con = sqlite3.connect(_TEL_DB)
+        today_start = _time.time() - (_time.time() % 86400)
+        con.execute("DELETE FROM ledger WHERE ts>=?", (today_start,))
+        con.commit(); con.close()
+        return {"ok": True, "message": "Today's telemetry reset"}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
 @app.get("/vaults")
 def vaults(_=Depends(require_auth)):
     return [_scan_vault(p) for p in VAULT_PATHS[:2]]
@@ -354,6 +432,7 @@ def chat_stream(req: ChatReq, _=Depends(require_auth)):
         # LOCAL OLLAMA - direct API call (fast, no Hermes overhead)
         if provider == "ollama":
             try:
+                _oll_chunks = []
                 payload = {"model": model_name,
                            "messages": [{"role":"system","content":persona_prompt+no_tts}] + [{"role":m.role,"content":m.content} for m in msgs],
                            "stream": True, "options": {"temperature": 0.7}}
@@ -364,14 +443,18 @@ def chat_stream(req: ChatReq, _=Depends(require_auth)):
                         try: obj = json.loads(line)
                         except: continue
                         chunk = (obj.get("message") or {}).get("content") or ""
-                        if chunk: yield f"event: token\ndata: {json.dumps({'text':chunk})}\n\n"
-                        if obj.get("done"): yield f"event: done\ndata: {json.dumps({'model':model_name,'persona':persona_key})}\n\n"; return
+                        if chunk: _oll_chunks.append(chunk); yield f"event: token\ndata: {json.dumps({'text':chunk})}\n\n"
+                        if obj.get("done"):
+                            _tok = max(1, obj.get("eval_count") or len("".join(_oll_chunks)) // 4)
+                            _cost = _tel_log(model_name, "ollama", _tok, persona_key)
+                            yield f"event: done\ndata: {json.dumps({'model':model_name,'persona':persona_key,'tokens':_tok,'cost':_cost})}\n\n"; return
             except Exception as e:
                 yield f"event: error\ndata: {json.dumps({'error':str(e)[:300]})}\n\n"
             return
         # LOCAL vLLM - direct API call (fast)
         if provider == "vllm":
             try:
+                _vllm_chunks = []
                 payload = {"model": model_name,
                            "messages": [{"role":"system","content":persona_prompt+no_tts}] + [{"role":m.role,"content":m.content} for m in msgs],
                            "stream": True, "temperature": 0.7, "max_tokens": 2048}
@@ -383,9 +466,11 @@ def chat_stream(req: ChatReq, _=Depends(require_auth)):
                             try:
                                 obj = json.loads(line[6:])
                                 chunk = (obj.get("choices",[{}])[0].get("delta") or {}).get("content") or ""
-                                if chunk: yield f"event: token\ndata: {json.dumps({'text':chunk})}\n\n"
+                                if chunk: _vllm_chunks.append(chunk); yield f"event: token\ndata: {json.dumps({'text':chunk})}\n\n"
                                 if (obj.get("choices",[{}])[0].get("finish_reason")) == "stop":
-                                    yield f"event: done\ndata: {json.dumps({'model':model_name,'persona':persona_key})}\n\n"; return
+                                    _tok = max(1, len("".join(_vllm_chunks)) // 4)
+                                    _cost = _tel_log(model_name, "vllm", _tok, persona_key)
+                                    yield f"event: done\ndata: {json.dumps({'model':model_name,'persona':persona_key,'tokens':_tok,'cost':_cost})}\n\n"; return
                             except: continue
             except Exception as e:
                 yield f"event: error\ndata: {json.dumps({'error':str(e)[:300]})}\n\n"
@@ -396,10 +481,13 @@ def chat_stream(req: ChatReq, _=Depends(require_auth)):
             try:
                 proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                         text=True, bufsize=1, env=env)
+                _cc_lines = []
                 for line in proc.stdout:
-                    if line.strip(): yield f"event: token\ndata: {json.dumps({'text':line})}\n\n"
+                    if line.strip(): _cc_lines.append(line); yield f"event: token\ndata: {json.dumps({'text':line})}\n\n"
                 proc.wait()
-                yield f"event: done\ndata: {json.dumps({'model':'claude-code','persona':persona_key})}\n\n"
+                _tok = max(1, sum(len(l) for l in _cc_lines) // 4)
+                _cost = _tel_log("claude-code", "claude_code_cli", _tok, persona_key)
+                yield f"event: done\ndata: {json.dumps({'model':'claude-code','persona':persona_key,'tokens':_tok,'cost':_cost})}\n\n"
             except Exception as e:
                 yield f"event: error\ndata: {json.dumps({'error':str(e)[:300]})}\n\n"
             return
@@ -433,7 +521,9 @@ def chat_stream(req: ChatReq, _=Depends(require_auth)):
             m = _re.search(r"--resume\s+(\S+)", full_text)
             if m:
                 save_session(m.group(1))
-            yield "event: done\ndata: " + json.dumps({"model": model, "persona": persona_key}) + "\n\n"
+            _tok = max(1, len(" ".join(full_out)) // 4)
+            _cost = _tel_log(model_name, "openrouter", _tok, persona_key)
+            yield "event: done\ndata: " + json.dumps({"model": model_name, "persona": persona_key, "tokens": _tok, "cost": _cost}) + "\n\n"
         except Exception as e:
             yield "event: error\ndata: " + json.dumps({"error": str(e)[:300]}) + "\n\n"
     return StreamingResponse(gen(), media_type="text/event-stream",
