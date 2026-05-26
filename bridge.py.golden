@@ -339,6 +339,72 @@ def spawn_agent(req: AgentSpawn, _=Depends(require_auth)):
 
 
 
+
+# ── Chat Persistence ───────────────────────────────────────────────────────────
+_CHAT_DB = os.path.expanduser("~/.hermes/chat_history.db")
+
+def _chat_db_init():
+    con = sqlite3.connect(_CHAT_DB)
+    con.execute("""CREATE TABLE IF NOT EXISTS chat_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts REAL, session_id TEXT, role TEXT,
+        content TEXT, persona TEXT, model TEXT,
+        provider TEXT, tokens INTEGER, cost_usd REAL
+    )""")
+    con.commit(); con.close()
+
+def _chat_save(session_id, role, content_text, persona, model, provider, tokens=0, cost=0.0):
+    try:
+        con = sqlite3.connect(_CHAT_DB)
+        con.execute("INSERT INTO chat_messages(ts,session_id,role,content,persona,model,provider,tokens,cost_usd) VALUES(?,?,?,?,?,?,?,?,?)",
+            (_time.time(), session_id, role, content_text, persona, model, provider, tokens, cost))
+        con.commit(); con.close()
+    except: pass
+
+_chat_db_init()
+
+AGENTS = {
+    "hermes-ceo":{"name":"HERMES · CEO","role":"Master Orchestrator","model":"qwen2.5-72b","provider":"vllm","color":"#00e5ff","icon":"⬡"},
+    "website-architect":{"name":"WEBSITE ARCHITECT","role":"AI Smart Websites","model":"qwen2.5-72b","provider":"vllm","color":"#00e5ff","icon":"🌐"},
+    "chatbot-engineer":{"name":"CHATBOT ENGINEER","role":"AI Chatbots","model":"qwen2.5-72b","provider":"vllm","color":"#ff00ff","icon":"💬"},
+    "voice-systems-eng":{"name":"VOICE SYSTEMS ENG","role":"Voice Bots & IVR","model":"qwen2.5-72b","provider":"vllm","color":"#aa44ff","icon":"🎙"},
+    "agent-architect":{"name":"AGENT ARCHITECT","role":"AI Agents","model":"qwen2.5-72b","provider":"vllm","color":"#00ff88","icon":"⚙"},
+    "automation-eng":{"name":"AUTOMATION ENG","role":"AI Workflows","model":"qwen2.5-72b","provider":"vllm","color":"#0088ff","icon":"⟳"},
+    "ai-consultant":{"name":"AI CONSULTANT","role":"Consulting & ROI","model":"anthropic/claude-sonnet-4","provider":"openrouter","color":"#ffd700","icon":"📊"},
+    "social-media-head":{"name":"SOCIAL MEDIA HEAD","role":"Social Marketing","model":"qwen2.5-72b","provider":"vllm","color":"#ff4488","icon":"📱"},
+    "crm-marketing-head":{"name":"CRM & MARKETING HEAD","role":"AI CRM","model":"qwen2.5-72b","provider":"vllm","color":"#ff8800","icon":"🎯"},
+    "security-head":{"name":"SECURITY HEAD","role":"Cybersecurity","model":"anthropic/claude-sonnet-4","provider":"openrouter","color":"#ff3355","icon":"🛡"},
+    "cfo-agent":{"name":"CFO AGENT","role":"Income Factories","model":"anthropic/claude-sonnet-4","provider":"openrouter","color":"#ffd700","icon":"₿"},
+    "marketing-campaigns":{"name":"MARKETING CAMPAIGNS","role":"AI Campaigns","model":"qwen2.5-72b","provider":"vllm","color":"#ff6600","icon":"📢"},
+}
+
+@app.get("/agents/registry")
+def agents_registry(_=Depends(require_auth)):
+    return {"agents": [{"id":k,**v} for k,v in AGENTS.items()]}
+
+@app.get("/chat/history")
+def chat_history(limit: int = 50, persona: str = "", _=Depends(require_auth)):
+    try:
+        con = sqlite3.connect(_CHAT_DB)
+        if persona:
+            rows = con.execute("SELECT ts,session_id,role,content,persona,model,tokens,cost_usd FROM chat_messages WHERE persona=? ORDER BY ts DESC LIMIT ?",(persona,limit)).fetchall()
+        else:
+            rows = con.execute("SELECT ts,session_id,role,content,persona,model,tokens,cost_usd FROM chat_messages ORDER BY ts DESC LIMIT ?",(limit,)).fetchall()
+        con.close()
+        return {"messages":[{"ts":r[0],"session":r[1],"role":r[2],"content":r[3],"persona":r[4],"model":r[5],"tokens":r[6],"cost":r[7]} for r in rows],"count":len(rows)}
+    except Exception as e:
+        return {"messages":[],"error":str(e)}
+
+@app.post("/chat/history/clear")
+def chat_history_clear(_=Depends(require_auth)):
+    try:
+        con = sqlite3.connect(_CHAT_DB)
+        con.execute("DELETE FROM chat_messages")
+        con.commit(); con.close()
+        return {"ok":True}
+    except Exception as e:
+        return {"ok":False,"error":str(e)}
+
 # ── Obsidian Bi-Directional Sync ──────────────────────────────────────────────
 VAULT_KNOWLEDGE = Path("/mnt/data/New-matrix-vault")
 VAULT_PRODUCTION = Path("/mnt/data/Matrix-Production")

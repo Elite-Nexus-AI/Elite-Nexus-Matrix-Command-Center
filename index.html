@@ -2045,5 +2045,56 @@ window.handleVaultCmd = function(arg) {
   else if (arg === 'sync') loadVaultFiles();
 };
 </script>
+
+<style>
+#agent-roster-panel{position:fixed;right:0;top:50%;transform:translateY(-50%);width:215px;background:#09101d;border:1px solid #00e5ff18;border-radius:6px 0 0 6px;padding:8px;z-index:5000;box-shadow:-4px 0 20px #000;transition:transform .3s;max-height:70vh;overflow-y:auto}
+#agent-roster-panel.hidden{transform:translateY(-50%) translateX(100%)}
+#agent-roster-toggle{position:fixed;right:0;top:calc(50% + 130px);width:22px;height:44px;background:#09101d;border:1px solid #00e5ff18;border-radius:4px 0 0 4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;color:#00e5ff44;z-index:5001}
+.ari{display:flex;align-items:center;gap:5px;padding:3px 5px;border-radius:2px;cursor:pointer;border:1px solid transparent;margin-bottom:2px;transition:all .15s}
+.ari:hover{background:#ffffff08}
+.ari.active-agent{border-color:#00e5ff40;background:#00e5ff08}
+</style>
+<div id="agent-roster-toggle" onclick="document.getElementById('agent-roster-panel').classList.toggle('hidden')">⬡</div>
+<div id="agent-roster-panel">
+  <div style="font-size:7px;letter-spacing:1.5px;color:#00e5ff55;font-weight:bold;margin-bottom:5px;padding-bottom:3px;border-bottom:1px solid #00e5ff10">⬡ DEPT HEADS · CLICK TO CONNECT</div>
+  <div id="agent-roster-list" style="font-size:8px"></div>
+</div>
+<script>
+var _activeAgent='hermes-ceo';
+async function loadAgents(){
+  try{
+    var r=await fetch('/agents/registry');
+    var d=await r.json();
+    window._agents={};
+    (d.agents||[]).forEach(function(a){window._agents[a.id]=a;});
+    renderRoster(d.agents||[]);
+  }catch(e){}
+}
+function renderRoster(agents){
+  var el=document.getElementById('agent-roster-list');
+  if(!el)return;
+  el.innerHTML='';
+  agents.forEach(function(a){
+    var div=document.createElement('div');
+    div.className='ari'+(a.id===_activeAgent?' active-agent':'');
+    div.style.borderColor=a.id===_activeAgent?a.color+'50':'transparent';
+    div.innerHTML='<span style="font-size:11px">'+a.icon+'</span><div style="flex:1;min-width:0"><div style="font-weight:bold;color:'+a.color+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:7.5px">'+a.name+'</div><div style="font-size:5.5px;color:#ffffff28">'+a.role+'</div></div><div style="width:4px;height:4px;border-radius:50%;background:'+(a.provider==='vllm'?'#00ff88':'#ffd700')+';flex-shrink:0"></div>';
+    div.onclick=function(){switchAgent(a.id,a);};
+    el.appendChild(div);
+  });
+}
+function switchAgent(id,data){
+  _activeAgent=id;
+  window._activeAgentData=data;
+  if(typeof addMsg==='function') addMsg('system','// Connected to '+data.name+' · '+data.role+' · '+data.model);
+  if(window._agents) renderRoster(Object.values(window._agents));
+  // Update chat header if elements exist
+  var ne=document.getElementById('active-agent-name');
+  var re=document.getElementById('active-agent-role');
+  if(ne) ne.textContent=data.name;
+  if(re) re.textContent=data.role+' · '+data.model;
+}
+document.addEventListener('DOMContentLoaded',function(){ loadAgents(); });
+</script>
 </body>
 </html>
