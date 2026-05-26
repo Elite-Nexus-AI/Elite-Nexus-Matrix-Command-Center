@@ -11,3 +11,7 @@ echo $! > /tmp/hotkey.pid
 echo 'Wake word + hotkey running'
 echo 'Say: Hermes / Matrix / Nexus'
 echo 'Hotkey: Ctrl+Space'
+
+echo 'Starting screen OCR daemon...'
+python3 screen_ocr.py >> /tmp/screen_ocr.log 2>&1 &
+echo $! > /tmp/screen_ocr.pid

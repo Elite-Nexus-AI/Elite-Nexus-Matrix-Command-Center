@@ -1040,6 +1040,40 @@ def brain_map(_=Depends(require_auth)):
         return {'regions':{},'error':str(e)}
 
 
+
+# -- Semantic Screen Awareness
+_screen_context = {'text':'','window':'','ts':0}
+
+class ScreenCtxReq(BaseModel):
+    text: str
+    window: str = ''
+    ts: float = 0.0
+
+@app.post('/screen/context')
+def screen_context_post(req: ScreenCtxReq, _=Depends(require_auth)):
+    global _screen_context
+    _screen_context = {'text': req.text[:2000], 'window': req.window, 'ts': req.ts}
+    return {'ok': True}
+
+@app.get('/screen/context')
+def screen_context_get(_=Depends(require_auth)):
+    return _screen_context
+
+@app.post('/screen/capture')
+async def screen_capture_now(_=Depends(require_auth)):
+    import subprocess as _sp2, tempfile as _tmp, base64 as _b64
+    tmp = _tmp.mktemp(suffix='.png')
+    try:
+        env = dict(os.environ)
+        env['DISPLAY'] = os.environ.get('DISPLAY', ':1')
+        _sp2.run(['scrot', '-u', tmp], env=env, timeout=5, capture_output=True)
+        if Path(tmp).exists():
+            data = Path(tmp).read_bytes()
+            Path(tmp).unlink(missing_ok=True)
+            return {'ok': True, 'image_b64': _b64.b64encode(data).decode(), 'window': _screen_context.get('window','')}
+    except Exception as e:
+        return {'ok': False, 'error': str(e)}
+
 # -- Nexus Codebase Graph
 @app.get('/nexus/graph')
 def nexus_graph(_=Depends(require_auth)):
