@@ -340,6 +340,133 @@ def spawn_agent(req: AgentSpawn, _=Depends(require_auth)):
 
 
 
+
+# ── Knowledge Ingestor ─────────────────────────────────────────────────────────
+import re as _re2, urllib.request as _urlreq
+
+def _chunk_text(text: str, chunk_size: int = 450) -> list:
+    """Split text into chunks of ~chunk_size lines, preserving paragraphs."""
+    lines = text.split("\n")
+    chunks = []
+    current = []
+    current_size = 0
+    for line in lines:
+        current.append(line)
+        current_size += 1
+        if current_size >= chunk_size and line.strip() == "":
+            chunks.append("\n".join(current))
+            current = []
+            current_size = 0
+    if current:
+        chunks.append("\n".join(current))
+    return [c for c in chunks if c.strip()]
+
+def _ingest_to_vault(text: str, topic: str, vault: str = "knowledge") -> dict:
+    """Chunk text and write to Obsidian vault as indexed chapters."""
+    import requests as _req3
+    base = VAULT_KNOWLEDGE if vault == "knowledge" else VAULT_PRODUCTION
+    topic_slug = _re2.sub(r"[^a-z0-9-]", "-", topic.lower()).strip("-")
+    topic_dir = base / "knowledge" / topic_slug
+    topic_dir.mkdir(parents=True, exist_ok=True)
+
+    chunks = _chunk_text(text)
+    chapter_files = []
+
+    # Generate smart chapter titles using vLLM
+    for i, chunk in enumerate(chunks):
+        chapter_num = str(i).zfill(2)
+        if i == 0:
+            chapter_name = "00_index"
+        else:
+            chapter_name = f"{chapter_num}_chapter"
+
+        chapter_file = topic_dir / f"{chapter_name}.md"
+        chapter_content = f"# {topic} — Chapter {i}\n\n{chunk}"
+        chapter_file.write_text(chapter_content)
+        chapter_files.append(str(chapter_file.relative_to(base)))
+
+    # Write master index
+    index_content = f"""# {topic} — Knowledge Index
+> Ingested: {__import__("datetime").datetime.now().strftime("%Y-%m-%d %H:%M")}
+> Chunks: {len(chunks)}
+> Vault: {vault}
+
+## Chapters
+""" + "\n".join([f"- [[{f}]]" for f in chapter_files])
+
+    index_file = topic_dir / "00_index.md"
+    index_file.write_text(index_content)
+
+    return {
+        "topic": topic,
+        "topic_slug": topic_slug,
+        "vault": vault,
+        "chunks": len(chunks),
+        "index": str(index_file),
+        "chapter_files": chapter_files
+    }
+
+class IngestTextReq(BaseModel):
+    text: str
+    topic: str
+    vault: str = "knowledge"
+
+class IngestUrlReq(BaseModel):
+    url: str
+    topic: str = ""
+    vault: str = "knowledge"
+
+@app.post("/ingest/text")
+def ingest_text(req: IngestTextReq, _=Depends(require_auth)):
+    try:
+        result = _ingest_to_vault(req.text, req.topic, req.vault)
+        return {"ok": True, **result}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+@app.post("/ingest/url")
+def ingest_url(req: IngestUrlReq, _=Depends(require_auth)):
+    try:
+        import requests as _rq4
+        r = _rq4.get(req.url, timeout=15, headers={"User-Agent":"Mozilla/5.0"})
+        r.raise_for_status()
+        # Strip HTML tags
+        text = _re2.sub(r"<[^>]+>", " ", r.text)
+        text = _re2.sub(r"\s+", " ", text).strip()
+        topic = req.topic or req.url.split("/")[2].replace("www.","")
+        result = _ingest_to_vault(text, topic, req.vault)
+        return {"ok": True, "source": req.url, **result}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+@app.post("/ingest/file")
+async def ingest_file(file: bytes = None, topic: str = "", vault: str = "knowledge", _=Depends(require_auth)):
+    return {"ok": False, "error": "Use /ingest/text for file content — read file client-side and POST text"}
+
+@app.get("/knowledge/list")
+def knowledge_list(_=Depends(require_auth)):
+    try:
+        results = []
+        for vault_base, vault_name in [(VAULT_KNOWLEDGE, "knowledge"), (VAULT_PRODUCTION, "production")]:
+            kb_dir = vault_base / "knowledge"
+            if kb_dir.exists():
+                for topic_dir in sorted(kb_dir.iterdir()):
+                    if topic_dir.is_dir():
+                        chunks = list(topic_dir.glob("*.md"))
+                        results.append({
+                            "topic": topic_dir.name,
+                            "vault": vault_name,
+                            "chunks": len(chunks),
+                            "path": str(topic_dir)
+                        })
+        return {"topics": results, "count": len(results)}
+    except Exception as e:
+        return {"topics": [], "error": str(e)}
+
+@app.post("/knowledge/search")
+def knowledge_search(req: VaultSearchReq, _=Depends(require_auth)):
+    return vault_search(req, _)
+
 # ── Chat Persistence ───────────────────────────────────────────────────────────
 _CHAT_DB = os.path.expanduser("~/.hermes/chat_history.db")
 
