@@ -2148,5 +2148,41 @@ function ceoSend(msg){
   }).catch(function(ex){if(typeof addMsg==='function') addMsg('system','x '+ex.message);});
 }
 </script>
+
+<script>
+/* ── FACTORY DASHBOARD ── */
+async function loadFactoryDashboard(){
+  try{
+    var r = await fetch('/factory/status');
+    var d = await r.json();
+    if(!d.factories) return;
+
+    // Update telemetry bar factory revenue if element exists
+    var revEl = document.getElementById('factory-revenue');
+    if(revEl) revEl.textContent = '$' + (d.totals.month||0).toFixed(2);
+
+    // Show in chat if triggered by command
+    return d;
+  }catch(e){ console.warn('Factory load error:', e); }
+}
+
+async function cfoBrief(){
+  if(typeof addMsg==='function') addMsg('system','o CFO AGENT generating factory brief...');
+  try{
+    var r = await fetch('/factory/cfo-brief',{method:'POST'});
+    var d = await r.json();
+    if(d.ok && typeof addMsg==='function'){
+      addMsg('assistant', '## CFO FACTORY BRIEF
+
+' + d.brief);
+    }
+  }catch(e){ if(typeof addMsg==='function') addMsg('system','x '+e.message); }
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  loadFactoryDashboard();
+  setInterval(loadFactoryDashboard, 60000);
+});
+</script>
 </body>
 </html>

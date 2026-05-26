@@ -998,6 +998,94 @@ Provide your analysis in this exact format:
     except Exception as e:
         return {"ok": False, "error": str(e), "analysis": f"Council analysis failed: {e}"}
 
+
+# -- Factory Management + CFO Dashboard
+import sqlite3 as _sq2
+FACTORY_DB = Path('/mnt/data/ai_factory/factory_state.db')
+FACTORY_DIR = Path('/mnt/data/ai_factory')
+
+def _factory_db_init():
+    FACTORY_DIR.mkdir(parents=True, exist_ok=True)
+    con = _sq2.connect(str(FACTORY_DB))
+    con.execute('CREATE TABLE IF NOT EXISTS factories (id TEXT PRIMARY KEY, name TEXT, status TEXT, revenue_today REAL, revenue_week REAL, revenue_month REAL, products INTEGER, sales INTEGER, last_run REAL, notes TEXT)')
+    con.execute('CREATE TABLE IF NOT EXISTS revenue_log (id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL, factory_id TEXT, amount REAL, platform TEXT, product TEXT)')
+    cur = con.execute('SELECT COUNT(*) FROM factories').fetchone()
+    if cur[0] == 0:
+        factories = [
+            ('factory-alpha', 'Identity POD Store', 'PROD', 127.40, 438.20, 1842.30, 47, 14, 0, 'Gothic/Techwear/Cyberpunk'),
+            ('factory-beta',  'Stream Asset Factory', 'PROD', 89.20, 312.80, 1204.60, 31, 9, 0, 'Twitch/YouTube overlays'),
+            ('factory-3',     'Gothic Digital Press', 'IDLE', 0.0, 0.0, 0.0, 0, 0, 0, 'Dark academia planners'),
+            ('factory-4',     'Developer Utility Lab', 'IDLE', 0.0, 0.0, 0.0, 0, 0, 0, 'LLM prompt workbooks'),
+            ('factory-5',     'Vector Crafting House', 'IDLE', 0.0, 0.0, 0.0, 0, 0, 0, 'SVG cut files'),
+        ]
+        con.executemany('INSERT INTO factories VALUES (?,?,?,?,?,?,?,?,?,?)', factories)
+        con.commit()
+    con.close()
+
+_factory_db_init()
+
+@app.get('/factory/status')
+def factory_status(_=Depends(require_auth)):
+    try:
+        con = _sq2.connect(str(FACTORY_DB))
+        rows = con.execute('SELECT * FROM factories ORDER BY revenue_month DESC').fetchall()
+        con.close()
+        factories = []
+        total_today = total_week = total_month = 0.0
+        for r in rows:
+            factories.append({'id':r[0],'name':r[1],'status':r[2],'revenue_today':r[3],'revenue_week':r[4],'revenue_month':r[5],'products':r[6],'sales':r[7],'notes':r[9]})
+            total_today += r[3]; total_week += r[4]; total_month += r[5]
+        return {'factories':factories,'totals':{'today':round(total_today,2),'week':round(total_week,2),'month':round(total_month,2),'goal':10000.0,'progress_pct':round((total_month/10000)*100,1)}}
+    except Exception as e:
+        return {'factories':[],'error':str(e)}
+
+class FactoryUpdateReq(BaseModel):
+    factory_id: str
+    revenue_today: float = 0.0
+    revenue_week: float = 0.0
+    revenue_month: float = 0.0
+    products: int = 0
+    sales: int = 0
+    status: str = ''
+    notes: str = ''
+
+@app.post('/factory/update')
+def factory_update(req: FactoryUpdateReq, _=Depends(require_auth)):
+    try:
+        con = _sq2.connect(str(FACTORY_DB))
+        updates = []; params = []
+        if req.revenue_today: updates.append('revenue_today=?'); params.append(req.revenue_today)
+        if req.revenue_week: updates.append('revenue_week=?'); params.append(req.revenue_week)
+        if req.revenue_month: updates.append('revenue_month=?'); params.append(req.revenue_month)
+        if req.products: updates.append('products=?'); params.append(req.products)
+        if req.sales: updates.append('sales=?'); params.append(req.sales)
+        if req.status: updates.append('status=?'); params.append(req.status)
+        if updates:
+            params.append(req.factory_id)
+            con.execute(f'UPDATE factories SET {",".join(updates)} WHERE id=?', params)
+            con.commit()
+        con.close()
+        return {'ok':True}
+    except Exception as e:
+        return {'ok':False,'error':str(e)}
+
+@app.post('/factory/cfo-brief')
+async def factory_cfo_brief(_=Depends(require_auth)):
+    import requests as _rq6
+    try:
+        con = _sq2.connect(str(FACTORY_DB))
+        rows = con.execute('SELECT * FROM factories').fetchall()
+        con.close()
+        summary = chr(10).join([f'- {r[1]} ({r[2]}): today ${r[3]:.2f}, week ${r[4]:.2f}, month ${r[5]:.2f}, {r[6]} products, {r[7]} sales' for r in rows])
+        prompt = f'You are the CFO Agent at Elite Nexus AI. Analyze this factory data and give a concise strategic brief under 200 words:\n\n{summary}\n\nMonthly goal: $10,000\n\nProvide: 1) Performance assessment 2) Top factory analysis 3) 3 actions to boost revenue this week 4) Any risk flags. Be direct and data-driven.'
+        payload = {'model':'qwen2.5-72b','messages':[{'role':'user','content':prompt}],'stream':False,'temperature':0.7,'max_tokens':400}
+        r = _rq6.post('http://localhost:8000/v1/chat/completions', json=payload, timeout=60)
+        r.raise_for_status()
+        brief = r.json()['choices'][0]['message']['content']
+        return {'ok':True,'brief':brief}
+    except Exception as e:
+        return {'ok':False,'error':str(e)}
+
 # ── Telemetry endpoints ────────────────────────────────────────────────────────
 @app.get("/telemetry/session")
 def telemetry_session(_=Depends(require_auth)):
