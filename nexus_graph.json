@@ -1,0 +1,383 @@
+{
+  "nodes": [
+    {
+      "id": 0,
+      "label": "run.sh",
+      "path": "run.sh",
+      "type": "shell",
+      "color": "#aa44ff",
+      "size": 870,
+      "imports": []
+    },
+    {
+      "id": 1,
+      "label": "stt_patch.py",
+      "path": "stt_patch.py",
+      "type": "python",
+      "color": "#00ff88",
+      "size": 4583,
+      "imports": [
+        "import re"
+      ]
+    },
+    {
+      "id": 2,
+      "label": "hermes_runner.py",
+      "path": "hermes_runner.py",
+      "type": "python",
+      "color": "#00ff88",
+      "size": 5309,
+      "imports": [
+        "import subprocess",
+        "import asyncio",
+        "import os",
+        "import re",
+        "import json",
+        "from pathlib import Path"
+      ]
+    },
+    {
+      "id": 3,
+      "label": "global_hotkey.py",
+      "path": "global_hotkey.py",
+      "type": "python",
+      "color": "#00ff88",
+      "size": 821,
+      "imports": [
+        "import subprocess, time, os",
+        "from pynput import keyboard"
+      ]
+    },
+    {
+      "id": 4,
+      "label": ".gitignore",
+      "path": ".gitignore",
+      "type": "other",
+      "color": "#444444",
+      "size": 94,
+      "imports": []
+    },
+    {
+      "id": 5,
+      "label": "nexus_graph.py",
+      "path": "nexus_graph.py",
+      "type": "python",
+      "color": "#00ff88",
+      "size": 3523,
+      "imports": [
+        "import os, json, ast, re",
+        "from pathlib import Path"
+      ]
+    },
+    {
+      "id": 6,
+      "label": "bridge.py.bak2",
+      "path": "bridge.py.bak2",
+      "type": "other",
+      "color": "#444444",
+      "size": 19270,
+      "imports": []
+    },
+    {
+      "id": 7,
+      "label": "bridge.py.golden",
+      "path": "bridge.py.golden",
+      "type": "other",
+      "color": "#444444",
+      "size": 75869,
+      "imports": []
+    },
+    {
+      "id": 8,
+      "label": "requirements.txt",
+      "path": "requirements.txt",
+      "type": "other",
+      "color": "#444444",
+      "size": 90,
+      "imports": []
+    },
+    {
+      "id": 9,
+      "label": "index.html.backup",
+      "path": "index.html.backup",
+      "type": "other",
+      "color": "#444444",
+      "size": 94905,
+      "imports": []
+    },
+    {
+      "id": 10,
+      "label": "start_wake.sh",
+      "path": "start_wake.sh",
+      "type": "shell",
+      "color": "#aa44ff",
+      "size": 460,
+      "imports": []
+    },
+    {
+      "id": 11,
+      "label": "start-matrix.sh",
+      "path": "start-matrix.sh",
+      "type": "shell",
+      "color": "#aa44ff",
+      "size": 2092,
+      "imports": []
+    },
+    {
+      "id": 12,
+      "label": "index.html.golden",
+      "path": "index.html.golden",
+      "type": "other",
+      "color": "#444444",
+      "size": 164554,
+      "imports": []
+    },
+    {
+      "id": 13,
+      "label": "MATRIX_OS_PROJECT_GUIDE.md",
+      "path": "MATRIX_OS_PROJECT_GUIDE.md",
+      "type": "docs",
+      "color": "#ffffff",
+      "size": 17270,
+      "imports": []
+    },
+    {
+      "id": 14,
+      "label": "llm_router.py",
+      "path": "llm_router.py",
+      "type": "router",
+      "color": "#ffd700",
+      "size": 9220,
+      "imports": [
+        "import os",
+        "import re",
+        "import json",
+        "import subprocess",
+        "import requests",
+        "from pathlib import Path",
+        "from typing import Optional"
+      ]
+    },
+    {
+      "id": 15,
+      "label": "fix-audio.sh",
+      "path": "fix-audio.sh",
+      "type": "shell",
+      "color": "#aa44ff",
+      "size": 333,
+      "imports": []
+    },
+    {
+      "id": 16,
+      "label": "start_vllm.sh",
+      "path": "start_vllm.sh",
+      "type": "shell",
+      "color": "#aa44ff",
+      "size": 2020,
+      "imports": []
+    },
+    {
+      "id": 17,
+      "label": "index_v2.html",
+      "path": "index_v2.html",
+      "type": "frontend",
+      "color": "#ff8800",
+      "size": 77404,
+      "imports": []
+    },
+    {
+      "id": 18,
+      "label": "bridge_v2.py",
+      "path": "bridge_v2.py",
+      "type": "python",
+      "color": "#00ff88",
+      "size": 19879,
+      "imports": [
+        "from __future__ import annotations",
+        "import asyncio, base64, io, json, os, re, subprocess, tempfile, time, wave",
+        "from pathlib import Path",
+        "from typing import Any",
+        "import psutil, requests",
+        "from fastapi import Depends, FastAPI, Header, HTTPException",
+        "from fastapi.middleware.cors import CORSMiddleware",
+        "from fastapi.responses import Response, StreamingResponse, FileResponse",
+        "from pydantic import BaseModel",
+        "import edge_tts"
+      ]
+    },
+    {
+      "id": 19,
+      "label": "bridge.py.backup",
+      "path": "bridge.py.backup",
+      "type": "other",
+      "color": "#444444",
+      "size": 18118,
+      "imports": []
+    },
+    {
+      "id": 20,
+      "label": "index.html.bak2",
+      "path": "index.html.bak2",
+      "type": "other",
+      "color": "#444444",
+      "size": 95589,
+      "imports": []
+    },
+    {
+      "id": 21,
+      "label": "nexus_graph.json",
+      "path": "nexus_graph.json",
+      "type": "config",
+      "color": "#0088ff",
+      "size": 8101,
+      "imports": []
+    },
+    {
+      "id": 22,
+      "label": "config.sh",
+      "path": "config.sh",
+      "type": "shell",
+      "color": "#aa44ff",
+      "size": 1943,
+      "imports": []
+    },
+    {
+      "id": 23,
+      "label": "README.md",
+      "path": "README.md",
+      "type": "docs",
+      "color": "#ffffff",
+      "size": 4204,
+      "imports": []
+    },
+    {
+      "id": 24,
+      "label": "deploy.sh",
+      "path": "deploy.sh",
+      "type": "shell",
+      "color": "#aa44ff",
+      "size": 808,
+      "imports": []
+    },
+    {
+      "id": 25,
+      "label": "wake_word.py",
+      "path": "wake_word.py",
+      "type": "python",
+      "color": "#00ff88",
+      "size": 1686,
+      "imports": [
+        "import whisper, pyaudio, numpy as np, struct, time, requests, threading, sys, os"
+      ]
+    },
+    {
+      "id": 26,
+      "label": "bridge.py",
+      "path": "bridge.py",
+      "type": "core",
+      "color": "#00e5ff",
+      "size": 78287,
+      "imports": [
+        "from __future__ import annotations",
+        "import asyncio, base64, io, json, os, re, subprocess, tempfile, time, wave",
+        "from pathlib import Path",
+        "from typing import Any",
+        "import psutil, requests",
+        "import sys as _sys_r, os as _os_r",
+        "from llm_router import select_model, get_routing_info, score_complexity, needs_t",
+        "import sqlite3, time as _time",
+        "from fastapi import Depends, FastAPI, Header, HTTPException",
+        "from fastapi.middleware.cors import CORSMiddleware"
+      ]
+    },
+    {
+      "id": 27,
+      "label": "start_vllm.sh.golden",
+      "path": "start_vllm.sh.golden",
+      "type": "other",
+      "color": "#444444",
+      "size": 2020,
+      "imports": []
+    },
+    {
+      "id": 28,
+      "label": "index.html",
+      "path": "index.html",
+      "type": "core",
+      "color": "#ff00ff",
+      "size": 164554,
+      "imports": []
+    },
+    {
+      "id": 29,
+      "label": "llm_usage.json",
+      "path": "data/llm_usage.json",
+      "type": "config",
+      "color": "#0088ff",
+      "size": 125,
+      "imports": []
+    },
+    {
+      "id": 30,
+      "label": "agents.json",
+      "path": "data/agents.json",
+      "type": "config",
+      "color": "#0088ff",
+      "size": 26439,
+      "imports": []
+    }
+  ],
+  "edges": [
+    {
+      "id": 0,
+      "source": 26,
+      "target": 14,
+      "color": "#00e5ff22"
+    },
+    {
+      "id": 1,
+      "source": 26,
+      "target": 28,
+      "color": "#00e5ff22"
+    },
+    {
+      "id": 2,
+      "source": 26,
+      "target": 25,
+      "color": "#00e5ff22"
+    },
+    {
+      "id": 3,
+      "source": 26,
+      "target": 3,
+      "color": "#00e5ff22"
+    },
+    {
+      "id": 4,
+      "source": 11,
+      "target": 26,
+      "color": "#00e5ff22"
+    },
+    {
+      "id": 5,
+      "source": 11,
+      "target": 16,
+      "color": "#00e5ff22"
+    },
+    {
+      "id": 6,
+      "source": 10,
+      "target": 25,
+      "color": "#00e5ff22"
+    },
+    {
+      "id": 7,
+      "source": 10,
+      "target": 3,
+      "color": "#00e5ff22"
+    }
+  ],
+  "repo": "/home/matrix/Downloads/files/matrix-hud-perfect",
+  "total_files": 31,
+  "total_edges": 8
+}

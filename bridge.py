@@ -1039,6 +1039,19 @@ def brain_map(_=Depends(require_auth)):
     except Exception as e:
         return {'regions':{},'error':str(e)}
 
+
+# -- Nexus Codebase Graph
+@app.get('/nexus/graph')
+def nexus_graph(_=Depends(require_auth)):
+    import subprocess as _sp
+    graph_file = Path.home() / 'Downloads/files/matrix-hud-perfect/nexus_graph.json'
+    try:
+        _sp.run(['python3', str(Path.home()/'Downloads/files/matrix-hud-perfect/nexus_graph.py')], timeout=15)
+    except: pass
+    if graph_file.exists():
+        return json.loads(graph_file.read_text())
+    return {'nodes':[],'edges':[],'error':'graph not built'}
+
 # -- Wake Word Endpoint
 class WakeReq(BaseModel):
     word: str
