@@ -1910,7 +1910,8 @@ async function triggerCouncil(){
   document.getElementById('council-result').classList.remove('visible');
   document.getElementById('council-to-project').style.display = 'none';
   try {
-    const r = await fetch('/council/analyze', {
+    const ctrl = new AbortController(); setTimeout(()=>ctrl.abort(), 120000);
+    const r = await fetch('/council/analyze', {signal: ctrl.signal,
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({content, content_type:'text'})
