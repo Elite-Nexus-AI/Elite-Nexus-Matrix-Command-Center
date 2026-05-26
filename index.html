@@ -1245,6 +1245,22 @@ function clearChat(){messages=[{role:'system',content:'History cleared.',ts:Date
 
 /* Send */
 async function sendMessage(text,imageB64=null){
+  // CEO dept head routing - if non-CEO agent active, use orchestrate endpoint
+    var agent = window._agents && window._agents[_activeAgent];
+    if(agent){
+      addMsg('user', text);
+      document.getElementById('cmd-in').value='';
+      addMsg('system', '⧗ ' + agent.name + ' thinking...');
+      try{
+        var _r = await fetch('/ceo/orchestrate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,agent_id:_activeAgent})});
+        var _d = await _r.json();
+        if(_d.ok){ addMsg('assistant', _d.response); }
+        else { addMsg('system','✗ '+(_d.error||'error')); }
+        if(window.fetchTelSession) fetchTelSession();
+      }catch(ex){ addMsg('system','✗ '+ex.message); }
+      return;
+    }
+  }
   if(!text.trim()&&!imageB64)return;
   if(!imageB64&&text.startsWith('/')){const h=await runSlash(text);if(h){clearInput();return;}}
   if(text.trim()){cmdHistory=[...cmdHistory.filter(h=>h!==text),text].slice(-50);cmdHistIdx=-1;}
@@ -1434,7 +1450,7 @@ function applySnapshot(data){
   updatePills();
   if(data.persona)setPersona(data.persona,false);
 }
-async function fetchSnapshot(){
+window.fetchSnapshot = async function fetchSnapshot(){
   try{
     const[hRes,sRes,gRes,lRes,aRes,vRes,mRes,pRes]=await Promise.allSettled([
       api('/health'),api('/metrics/system'),api('/metrics/gpu'),api('/metrics/llm'),
@@ -2292,6 +2308,101 @@ function toggleAutoRoute() {
     btn.style.color = _ceoAutoRoute ? '#00e5ff' : '#ffffff33';
   }
 }
+</script>
+
+<script>
+/* ── CEO ORCHESTRATION HOOK ── */
+// Override the existing send to use dept head when non-CEO agent selected
+var _originalSend = null;
+
+document.addEventListener('DOMContentLoaded', function(){
+  // Wait for HUD to fully init
+  setTimeout(function(){
+    var sendBtn = document.querySelector('button.btn-send, button[onclick*="send"], .send-btn');
+    var inputEl = document.getElementById('chat-input') || document.querySelector('input.chat-in, textarea.chat-in');
+    if(!inputEl) return;
+
+    // Intercept keydown Enter
+    inputEl.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' && !e.shiftKey){
+        var msg = inputEl.value.trim();
+        if(msg && _activeAgent && _activeAgent !== 'hermes-ceo'){
+          e.preventDefault();
+          e.stopPropagation();
+          sendViaAgent(msg, inputEl);
+        }
+      }
+    }, true);
+  }, 2000);
+});
+
+async function sendViaAgent(msg, inputEl){
+  if(!msg) return;
+  var agent = window._agents && window._agents[_activeAgent];
+  if(!agent) return;
+
+  // Show user message
+  if(typeof addMsg === 'function') addMsg('user', msg);
+  if(inputEl) inputEl.value = '';
+
+  // Show thinking
+  var thinkId = 'think-'+Date.now();
+  if(typeof addMsg === 'function') addMsg('system', '⧗ ' + (agent.name||_activeAgent) + ' thinking...');
+
+  try{
+    var r = await fetch('/ceo/orchestrate', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        message: msg,
+        agent_id: _activeAgent,
+        persona: agent.persona || _activeAgent
+      })
+    });
+    var d = await r.json();
+    if(d.ok){
+      if(typeof addMsg === 'function'){
+        addMsg('assistant', d.response);
+      }
+      // Update telemetry
+      if(window.fetchTelSession) fetchTelSession();
+    } else {
+      if(typeof addMsg === 'function') addMsg('system', '✗ Error: ' + d.error);
+    }
+  }catch(ex){
+    if(typeof addMsg === 'function') addMsg('system', '✗ ' + ex.message);
+  }
+}
+</script>
+
+<script>
+// Bridge reconnect retry
+setTimeout(function(){
+  var dot = document.getElementById('bridge-dot');
+  var stat = document.getElementById('bridge-status');
+  if(dot && dot.style.background && dot.style.background.indexOf('danger') !== -1){
+    // Force reconnect by calling init() 
+    if(typeof init === 'function') { init(); }
+  }
+}, 3000);
+</script>
+<script>
+setTimeout(function(){
+  var initEl = document.getElementById('init');
+  var hudEl = document.getElementById('hud');
+  if(initEl && initEl.style.display !== 'none'){
+    console.log('Force showing HUD...');
+    if(typeof snapshotReady !== 'undefined') {}
+    initEl.style.display = 'none';
+    if(hudEl) hudEl.style.display = 'grid';
+    var specLabel = document.getElementById('spec-label');
+    if(specLabel) specLabel.style.display = '';
+    var dot = document.getElementById('bridge-dot');
+    var stat = document.getElementById('bridge-status');
+    if(dot) dot.style.background = 'var(--lime)';
+    if(stat){ stat.textContent = 'BRIDGE ONLINE'; stat.style.color = 'var(--lime)'; }
+  }
+}, 2000);
 </script>
 </body>
 </html>
