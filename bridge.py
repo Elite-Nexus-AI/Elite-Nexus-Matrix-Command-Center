@@ -999,6 +999,57 @@ Provide your analysis in this exact format:
         return {"ok": False, "error": str(e), "analysis": f"Council analysis failed: {e}"}
 
 
+
+# -- Vault Assignment System
+VAULT_ASSIGNMENTS_FILE = Path.home() / '.hermes' / 'vault_assignments.json'
+
+def _load_vault_assignments():
+    if VAULT_ASSIGNMENTS_FILE.exists():
+        try:
+            return json.loads(VAULT_ASSIGNMENTS_FILE.read_text())
+        except: pass
+    defaults = {}
+    for aid in ['hermes-ceo','website-architect','chatbot-engineer','voice-systems-eng','agent-architect','automation-eng','ai-consultant','social-media-head','crm-marketing-head','security-head','cfo-agent','marketing-campaigns']:
+        defaults[aid] = {'daily_notes':'New-matrix-vault/daily','projects':'Matrix-Production/projects','knowledge':'New-matrix-vault/knowledge','auto_chunk':True,'chunk_size':450,'chapter_split':True,'auto_summary':True}
+    defaults['cfo-agent']['knowledge'] = 'Matrix-Production/projects/cfo/research'
+    defaults['cfo-agent']['projects'] = 'Matrix-Production/projects/cfo'
+    return defaults
+
+def _save_vault_assignments(a):
+    VAULT_ASSIGNMENTS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    VAULT_ASSIGNMENTS_FILE.write_text(json.dumps(a, indent=2))
+
+class VaultAssignReq(BaseModel):
+    agent_id: str
+    daily_notes: str = ''
+    projects: str = ''
+    knowledge: str = ''
+    auto_chunk: bool = True
+    chunk_size: int = 450
+    chapter_split: bool = True
+    auto_summary: bool = True
+
+@app.get('/vault/assign')
+def vault_assign_get(_=Depends(require_auth)):
+    return {'assignments': _load_vault_assignments()}
+
+@app.post('/vault/assign')
+def vault_assign_set(req: VaultAssignReq, _=Depends(require_auth)):
+    try:
+        a = _load_vault_assignments()
+        if req.agent_id not in a: a[req.agent_id] = {}
+        if req.daily_notes: a[req.agent_id]['daily_notes'] = req.daily_notes
+        if req.projects: a[req.agent_id]['projects'] = req.projects
+        if req.knowledge: a[req.agent_id]['knowledge'] = req.knowledge
+        a[req.agent_id]['auto_chunk'] = req.auto_chunk
+        a[req.agent_id]['chunk_size'] = req.chunk_size
+        a[req.agent_id]['chapter_split'] = req.chapter_split
+        a[req.agent_id]['auto_summary'] = req.auto_summary
+        _save_vault_assignments(a)
+        return {'ok': True, 'config': a[req.agent_id]}
+    except Exception as e:
+        return {'ok': False, 'error': str(e)}
+
 # -- Factory Management + CFO Dashboard
 import sqlite3 as _sq2
 FACTORY_DB = Path('/mnt/data/ai_factory/factory_state.db')

@@ -2184,5 +2184,105 @@ document.addEventListener('DOMContentLoaded', function(){
   setInterval(loadFactoryDashboard, 60000);
 });
 </script>
+
+<style>
+#vault-assign-panel{
+  position:fixed;left:0;top:50%;transform:translateY(-50%);
+  width:280px;background:#0a0d18;border:1px solid #aa44ff50;
+  border-radius:0 8px 8px 0;padding:12px;z-index:5000;
+  box-shadow:4px 0 30px #000,0 0 20px #aa44ff15;
+  transition:transform .3s;max-height:75vh;overflow-y:auto;display:none;
+}
+#vault-assign-panel.open{display:block}
+#vault-assign-toggle{
+  position:fixed;left:0;top:calc(50% + 60px);
+  width:22px;height:44px;background:#09101d;
+  border:1px solid #aa44ff18;border-radius:0 4px 4px 0;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:9px;color:#aa44ff44;z-index:5001;
+}
+.va-row{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.va-lbl{font-size:9px;color:#aa44ffaa;width:72px;flex-shrink:0;letter-spacing:.5px}
+.va-sel{flex:1;background:#0d1020;border:1px solid #aa44ff35;color:#cc88ff;
+  font-size:8px;padding:4px 6px;font-family:inherit;border-radius:3px}
+.va-tog{width:20px;height:10px;background:#ffffff08;border-radius:5px;
+  position:relative;cursor:pointer;border:1px solid #aa44ff18;flex-shrink:0}
+.va-tog.on{background:#aa44ff20;border-color:#aa44ff40}
+.va-tog::after{content:'';position:absolute;top:1px;left:1px;width:6px;height:6px;
+  border-radius:50%;background:#ffffff30;transition:all .2s}
+.va-tog.on::after{left:11px;background:#aa44ff}
+</style>
+<div id="vault-assign-toggle" onclick="document.getElementById('vault-assign-panel').classList.toggle('open')" title="Vault Assignment">🗄</div>
+<div id="vault-assign-panel">
+  <div style="font-size:10px;letter-spacing:2px;color:#aa44ffcc;font-weight:bold;margin-bottom:8px;border-bottom:1px solid #aa44ff25;padding-bottom:6px;text-shadow:0 0 8px #aa44ff44">🗄 VAULT ASSIGNMENT</div>
+  <div style="font-size:9px;color:#aa44ff99;margin-bottom:8px;letter-spacing:1px;font-weight:bold" id="va-agent-label">HERMES · CEO</div>
+  <div class="va-row"><span class="va-lbl">Daily Notes</span><select class="va-sel" id="va-daily"><option>New-matrix-vault/daily</option><option>Matrix-Production/logs</option></select></div>
+  <div class="va-row"><span class="va-lbl">Projects</span><select class="va-sel" id="va-projects"><option>Matrix-Production/projects</option><option>New-matrix-vault/projects</option></select></div>
+  <div class="va-row"><span class="va-lbl">Knowledge</span><select class="va-sel" id="va-knowledge"><option>New-matrix-vault/knowledge</option><option>Matrix-Production/kb</option><option>Matrix-Production/projects/cfo/research</option></select></div>
+  <div style="border-top:1px solid #aa44ff25;margin:10px 0;padding-top:8px">
+    <div class="va-row"><span class="va-lbl" style="width:130px;font-size:9px">Auto-chunk (450 lines)</span><div class="va-tog on" id="va-chunk" onclick="this.classList.toggle('on')"></div></div>
+    <div class="va-row"><span class="va-lbl" style="width:130px;font-size:9px">Chapter split</span><div class="va-tog on" id="va-chapter" onclick="this.classList.toggle('on')"></div></div>
+    <div class="va-row"><span class="va-lbl" style="width:130px;font-size:9px">Daily auto-summary</span><div class="va-tog on" id="va-summary" onclick="this.classList.toggle('on')"></div></div>
+  </div>
+  <button onclick="saveVaultAssign()" style="width:100%;padding:6px;background:#aa44ff15;border:1px solid #aa44ff45;color:#cc88ff;font-family:inherit;font-size:9px;cursor:pointer;border-radius:3px;letter-spacing:1px;font-weight:bold">💾 SAVE CONFIG</button>
+  <div id="va-status" style="font-size:9px;color:#00ff8899;margin-top:5px;text-align:center;font-weight:bold"></div>
+</div>
+<script>
+async function loadVaultAssign(agentId){
+  try{
+    var r = await fetch('/vault/assign');
+    var d = await r.json();
+    var config = d.assignments && d.assignments[agentId];
+    if(!config) return;
+    var dl = document.getElementById('va-daily');
+    var pr = document.getElementById('va-projects');
+    var kn = document.getElementById('va-knowledge');
+    if(dl) dl.value = config.daily_notes || dl.options[0].value;
+    if(pr) pr.value = config.projects || pr.options[0].value;
+    if(kn) kn.value = config.knowledge || kn.options[0].value;
+    var chunk = document.getElementById('va-chunk');
+    var chapter = document.getElementById('va-chapter');
+    var summary = document.getElementById('va-summary');
+    if(chunk) chunk.classList.toggle('on', !!config.auto_chunk);
+    if(chapter) chapter.classList.toggle('on', !!config.chapter_split);
+    if(summary) summary.classList.toggle('on', !!config.auto_summary);
+    var lbl = document.getElementById('va-agent-label');
+    if(lbl && window._agents && window._agents[agentId]) lbl.textContent = window._agents[agentId].name;
+  }catch(e){}
+}
+
+async function saveVaultAssign(){
+  var agentId = typeof _activeAgent !== 'undefined' ? _activeAgent : 'hermes-ceo';
+  var payload = {
+    agent_id: agentId,
+    daily_notes: document.getElementById('va-daily').value,
+    projects: document.getElementById('va-projects').value,
+    knowledge: document.getElementById('va-knowledge').value,
+    auto_chunk: document.getElementById('va-chunk').classList.contains('on'),
+    chunk_size: 450,
+    chapter_split: document.getElementById('va-chapter').classList.contains('on'),
+    auto_summary: document.getElementById('va-summary').classList.contains('on')
+  };
+  try{
+    var r = await fetch('/vault/assign',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    var d = await r.json();
+    var st = document.getElementById('va-status');
+    if(d.ok){ st.textContent = 'Saved!'; st.style.color = '#00ff88'; }
+    else { st.textContent = 'Error: '+d.error; st.style.color = '#ff3333'; }
+    setTimeout(function(){ if(st) st.textContent=''; },2000);
+  }catch(ex){ console.warn(ex); }
+}
+
+// Update vault panel when agent switches
+var _origSwitchAgent = window.switchAgent;
+window.switchAgent = function(id, data){
+  if(_origSwitchAgent) _origSwitchAgent(id, data);
+  loadVaultAssign(id);
+};
+
+document.addEventListener('DOMContentLoaded', function(){
+  setTimeout(function(){ loadVaultAssign('hermes-ceo'); }, 2000);
+});
+</script>
 </body>
 </html>
