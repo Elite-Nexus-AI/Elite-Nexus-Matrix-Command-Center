@@ -234,6 +234,243 @@ def _get_ollama_models():
     return [DEFAULT_MODEL]
 
 # ── Routes ────────────────────────────────────────────────────────────────────
+
+# ═══════════════════════════════════════════════════════
+# IRIS VAULT — PostgreSQL + pgvector semantic memory
+# ═══════════════════════════════════════════════════════
+import psycopg2
+import psycopg2.extras
+import json as _json
+
+IRIS_DSN = "host=localhost port=5432 dbname=iris user=matrix password=nexus2025"
+
+def iris_conn():
+    return psycopg2.connect(IRIS_DSN)
+
+def get_embedding(text: str) -> list:
+    """Get embedding from nomic-embed-text via Ollama"""
+    import requests as _rq
+    try:
+        r = _rq.post("http://localhost:11434/api/embeddings",
+            json={"model": "nomic-embed-text", "prompt": text[:2000]}, timeout=15)
+        return r.json().get("embedding", [])
+    except:
+        return []
+
+class IrisSearchReq(BaseModel):
+    query: str
+    table: str = "vault_notes"
+    limit: int = 5
+    agent_id: str = ""
+
+class IrisRememberReq(BaseModel):
+    agent_id: str
+    content: str
+    memory_type: str = "general"
+    tags: list = []
+
+class IrisNoteReq(BaseModel):
+    path: str
+    vault: str
+    content: str
+    topic: str = ""
+    tags: list = []
+
+class IrisDreamReq(BaseModel):
+    prompt: str
+    idea: str
+    approved: bool = False
+
+class IrisTaskReq(BaseModel):
+    factory_id: str
+    task: str
+    status: str = "queued"
+    result: str = ""
+
+@app.get("/iris/health")
+def iris_health():
+    try:
+        conn = iris_conn()
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM agent_memory")
+        am = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM vault_notes")
+        vn = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM factory_tasks")
+        ft = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM dream_ideas")
+        di = cur.fetchone()[0]
+        conn.close()
+        return {"ok": True, "agent_memories": am, "vault_notes": vn,
+                "factory_tasks": ft, "dream_ideas": di, "status": "ONLINE"}
+    except Exception as e:
+        return {"ok": False, "error": str(e), "status": "OFFLINE"}
+
+@app.post("/iris/search")
+def iris_search(req: IrisSearchReq):
+    try:
+        emb = get_embedding(req.query)
+        if not emb:
+            return {"ok": False, "error": "Embedding failed", "results": []}
+        conn = iris_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        table = req.table if req.table in ["vault_notes","agent_memory","factory_tasks","dream_ideas"] else "vault_notes"
+        emb_str = "[" + ",".join(str(x) for x in emb) + "]"
+        if table == "agent_memory":
+            where = "WHERE agent_id = %s" if req.agent_id else ""
+            params = (emb_str, req.agent_id, emb_str, req.limit) if req.agent_id else (emb_str, emb_str, req.limit)
+            cur.execute(f"""SELECT id, agent_id, content, memory_type, tags,
+                            created_at, 1 - (embedding <=> %s::vector) AS similarity
+                            FROM {table} {where}
+                            ORDER BY embedding <=> %s::vector LIMIT %s""", params)
+        elif table == "vault_notes":
+            cur.execute(f"""SELECT id, content, topic, vault, tags,
+                            created_at, 1 - (embedding <=> %s::vector) AS similarity
+                            FROM {table}
+                            ORDER BY embedding <=> %s::vector LIMIT %s""",
+                       (emb_str, emb_str, req.limit))
+        elif table == "factory_tasks":
+            cur.execute(f"""SELECT id, factory_id, task, status, result,
+                            created_at, 1 - (embedding <=> %s::vector) AS similarity
+                            FROM {table}
+                            ORDER BY embedding <=> %s::vector LIMIT %s""",
+                       (emb_str, emb_str, req.limit))
+        else:
+            cur.execute(f"""SELECT id, prompt, idea, approved,
+                            created_at, 1 - (embedding <=> %s::vector) AS similarity
+                            FROM {table}
+                            ORDER BY embedding <=> %s::vector LIMIT %s""",
+                       (emb_str, emb_str, req.limit))
+        results = [dict(r) for r in cur.fetchall()]
+        for r in results:
+            if r.get("created_at"): r["created_at"] = str(r["created_at"])
+        conn.close()
+        return {"ok": True, "query": req.query, "table": table, "results": results}
+    except Exception as e:
+        return {"ok": False, "error": str(e), "results": []}
+
+@app.post("/iris/remember")
+def iris_remember(req: IrisRememberReq):
+    try:
+        emb = get_embedding(req.content)
+        conn = iris_conn()
+        cur = conn.cursor()
+        emb_str = "[" + ",".join(str(x) for x in emb) + "]" if emb else None
+        cur.execute("""INSERT INTO agent_memory (agent_id, content, embedding, memory_type, tags)
+                       VALUES (%s, %s, %s::vector, %s, %s) RETURNING id""",
+                   (req.agent_id, req.content, emb_str, req.memory_type, req.tags))
+        mem_id = cur.fetchone()[0]
+        conn.commit(); conn.close()
+        return {"ok": True, "id": mem_id, "agent_id": req.agent_id, "embedded": bool(emb)}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+@app.post("/iris/recall")
+def iris_recall(req: IrisSearchReq):
+    req.table = "agent_memory"
+    return iris_search(req)
+
+@app.post("/iris/note")
+def iris_note(req: IrisNoteReq):
+    try:
+        emb = get_embedding(req.content)
+        conn = iris_conn()
+        cur = conn.cursor()
+        emb_str = "[" + ",".join(str(x) for x in emb) + "]" if emb else None
+        cur.execute("""INSERT INTO vault_notes (path, vault, content, embedding, topic, tags)
+                       VALUES (%s, %s, %s, %s::vector, %s, %s)
+                       ON CONFLICT (path) DO UPDATE SET
+                       content=EXCLUDED.content, embedding=EXCLUDED.embedding,
+                       topic=EXCLUDED.topic, tags=EXCLUDED.tags, updated_at=NOW()
+                       RETURNING id""",
+                   (req.path, req.vault, req.content, emb_str, req.topic, req.tags))
+        note_id = cur.fetchone()[0]
+        conn.commit(); conn.close()
+        return {"ok": True, "id": note_id, "path": req.path, "embedded": bool(emb)}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+@app.post("/iris/dream")
+def iris_dream(req: IrisDreamReq):
+    try:
+        emb = get_embedding(req.idea)
+        conn = iris_conn()
+        cur = conn.cursor()
+        emb_str = "[" + ",".join(str(x) for x in emb) + "]" if emb else None
+        cur.execute("""INSERT INTO dream_ideas (prompt, idea, embedding, approved)
+                       VALUES (%s, %s, %s::vector, %s) RETURNING id""",
+                   (req.prompt, req.idea, emb_str, req.approved))
+        dream_id = cur.fetchone()[0]
+        conn.commit(); conn.close()
+        return {"ok": True, "id": dream_id, "embedded": bool(emb)}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+@app.post("/iris/task")
+def iris_task(req: IrisTaskReq):
+    try:
+        emb = get_embedding(req.task)
+        conn = iris_conn()
+        cur = conn.cursor()
+        emb_str = "[" + ",".join(str(x) for x in emb) + "]" if emb else None
+        completed = "NOW()" if req.status == "done" else "NULL"
+        cur.execute(f"""INSERT INTO factory_tasks (factory_id, task, status, result, embedding, completed_at)
+                       VALUES (%s, %s, %s, %s, %s::vector, {completed}) RETURNING id""",
+                   (req.factory_id, req.task, req.status, req.result, emb_str))
+        task_id = cur.fetchone()[0]
+        conn.commit(); conn.close()
+        return {"ok": True, "id": task_id, "factory_id": req.factory_id}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+@app.get("/iris/tasks/{factory_id}")
+def iris_get_tasks(factory_id: str):
+    try:
+        conn = iris_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""SELECT id, task, status, result, created_at, completed_at
+                       FROM factory_tasks WHERE factory_id = %s
+                       ORDER BY created_at DESC LIMIT 50""", (factory_id,))
+        tasks = [dict(r) for r in cur.fetchall()]
+        for t in tasks:
+            if t.get("created_at"): t["created_at"] = str(t["created_at"])
+            if t.get("completed_at"): t["completed_at"] = str(t["completed_at"])
+        conn.close()
+        return {"ok": True, "factory_id": factory_id, "tasks": tasks}
+    except Exception as e:
+        return {"ok": False, "error": str(e), "tasks": []}
+
+@app.get("/iris/memories/{agent_id}")
+def iris_get_memories(agent_id: str):
+    try:
+        conn = iris_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""SELECT id, content, memory_type, tags, created_at
+                       FROM agent_memory WHERE agent_id = %s
+                       ORDER BY created_at DESC LIMIT 20""", (agent_id,))
+        mems = [dict(r) for r in cur.fetchall()]
+        for m in mems:
+            if m.get("created_at"): m["created_at"] = str(m["created_at"])
+        conn.close()
+        return {"ok": True, "agent_id": agent_id, "memories": mems}
+    except Exception as e:
+        return {"ok": False, "error": str(e), "memories": []}
+
+@app.get("/iris/dreams")
+def iris_get_dreams(approved: bool = False):
+    try:
+        conn = iris_conn()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""SELECT id, prompt, idea, approved, created_at
+                       FROM dream_ideas ORDER BY created_at DESC LIMIT 30""")
+        dreams = [dict(r) for r in cur.fetchall()]
+        for d in dreams:
+            if d.get("created_at"): d["created_at"] = str(d["created_at"])
+        conn.close()
+        return {"ok": True, "dreams": dreams}
+    except Exception as e:
+        return {"ok": False, "error": str(e), "dreams": []}
+
 @app.get("/")
 def root():
     return FileResponse(ROOT / "index.html")

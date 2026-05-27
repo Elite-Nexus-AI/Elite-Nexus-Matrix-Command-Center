@@ -1319,3 +1319,28 @@ function _buildOffice2D(canvas, factory, accentCol, isLive) {
   var aColors2 = [accentCol,'#00e5ff','#ff00ff','#ffd700','#aa44ff','#00ff88'];
   draw();
 }
+
+
+/* ── IRIS VAULT STATUS ── */
+async function checkIrisStatus() {
+  try {
+    var r = await fetch('/iris/health');
+    var d = await r.json();
+    var el = document.getElementById('iris-status-badge');
+    var am = document.getElementById('iris-memories');
+    var vn = document.getElementById('iris-notes');
+    if (el) {
+      el.textContent = d.status || 'UNKNOWN';
+      el.style.color = d.ok ? '#00ff88' : '#ff3355';
+    }
+    if (am) am.textContent = d.agent_memories + ' memories';
+    if (vn) vn.textContent = d.vault_notes + ' notes';
+  } catch(e) {}
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    checkIrisStatus();
+    setInterval(checkIrisStatus, 15000);
+  }, 5000);
+});
