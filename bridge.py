@@ -471,6 +471,112 @@ def iris_get_dreams(approved: bool = False):
     except Exception as e:
         return {"ok": False, "error": str(e), "dreams": []}
 
+
+# ═══════════════════════════════════════════════════════
+# S17 — n8n + Dify integration endpoints
+# ═══════════════════════════════════════════════════════
+
+N8N_BASE    = "http://localhost:5678"
+DIFY_BASE   = "http://localhost:5001"
+DIFY_API_KEY = os.environ.get("DIFY_API_KEY", "")
+
+class N8nWebhookReq(BaseModel):
+    workflow: str
+    payload: dict = {}
+
+class DifyChatReq(BaseModel):
+    app_id: str
+    query: str
+    user: str = "matrix-hud"
+    conversation_id: str = ""
+    inputs: dict = {}
+
+@app.get("/n8n/health")
+def n8n_health():
+    try:
+        import requests as _rq
+        r = _rq.get(f"{N8N_BASE}/healthz", timeout=5)
+        return {"ok": True, "status": r.json().get("status","unknown"), "url": N8N_BASE}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+@app.get("/n8n/workflows")
+def n8n_workflows():
+    try:
+        import requests as _rq
+        r = _rq.get(f"{N8N_BASE}/api/v1/workflows",
+            headers={"X-N8N-API-KEY": os.environ.get("N8N_API_KEY","")}, timeout=8)
+        if r.status_code == 200:
+            data = r.json()
+            workflows = data.get("data", [])
+            return {"ok": True, "count": len(workflows),
+                    "workflows": [{"id":w.get("id"),"name":w.get("name"),"active":w.get("active")} for w in workflows]}
+        return {"ok": False, "status": r.status_code, "workflows": []}
+    except Exception as e:
+        return {"ok": False, "error": str(e), "workflows": []}
+
+@app.post("/n8n/trigger")
+def n8n_trigger(req: N8nWebhookReq):
+    try:
+        import requests as _rq
+        url = f"{N8N_BASE}/webhook/{req.workflow}"
+        r = _rq.post(url, json=req.payload, timeout=15)
+        return {"ok": True, "status": r.status_code, "workflow": req.workflow,
+                "response": r.json() if r.headers.get("content-type","").startswith("application/json") else r.text[:200]}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+@app.get("/dify/health")
+def dify_health():
+    try:
+        import requests as _rq
+        r = _rq.get(f"{DIFY_BASE}/health", timeout=5)
+        data = r.json()
+        return {"ok": True, "status": data.get("status","unknown"),
+                "version": data.get("version",""), "url": DIFY_BASE}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+@app.get("/dify/apps")
+def dify_apps():
+    try:
+        import requests as _rq
+        r = _rq.get(f"{DIFY_BASE}/console/api/apps",
+            headers={"Authorization": f"Bearer {DIFY_API_KEY}"}, timeout=8)
+        if r.status_code == 200:
+            data = r.json()
+            apps = data.get("data", [])
+            return {"ok": True, "count": len(apps),
+                    "apps": [{"id":a.get("id"),"name":a.get("name"),"mode":a.get("mode")} for a in apps]}
+        return {"ok": False, "status": r.status_code, "apps": []}
+    except Exception as e:
+        return {"ok": False, "error": str(e), "apps": []}
+
+@app.post("/dify/chat")
+def dify_chat(req: DifyChatReq):
+    try:
+        import requests as _rq
+        payload = {
+            "inputs": req.inputs,
+            "query": req.query,
+            "user": req.user,
+            "response_mode": "blocking"
+        }
+        if req.conversation_id:
+            payload["conversation_id"] = req.conversation_id
+        r = _rq.post(f"{DIFY_BASE}/v1/chat-messages",
+            headers={"Authorization": f"Bearer {req.app_id}",
+                     "Content-Type": "application/json"},
+            json=payload, timeout=30)
+        if r.status_code == 200:
+            data = r.json()
+            return {"ok": True, "answer": data.get("answer",""),
+                    "conversation_id": data.get("conversation_id",""),
+                    "usage": data.get("metadata",{}).get("usage",{})}
+        return {"ok": False, "status": r.status_code, "error": r.text[:200]}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
 @app.get("/")
 def root():
     return FileResponse(ROOT / "index.html")

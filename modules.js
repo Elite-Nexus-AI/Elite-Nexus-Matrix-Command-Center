@@ -1344,3 +1344,24 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(checkIrisStatus, 15000);
   }, 5000);
 });
+
+/* ── S17: n8n + Dify STATUS SYNC ── */
+async function checkN8nDifyStatus() {
+  try {
+    var n8n = await fetch('/n8n/health').then(function(r){return r.json();});
+    var dify = await fetch('/dify/health').then(function(r){return r.json();});
+    /* update nav buttons with live status */
+    document.querySelectorAll('.nav-btn').forEach(function(btn){
+      if(btn.textContent.includes('n8n')){
+        btn.style.borderColor = n8n.ok ? 'rgba(255,140,0,0.6)' : 'rgba(255,51,85,0.4)';
+        btn.title = 'n8n: ' + (n8n.ok ? 'ONLINE' : 'OFFLINE');
+      }
+      if(btn.textContent.includes('DIFY')){
+        btn.style.borderColor = dify.ok ? 'rgba(99,102,241,0.6)' : 'rgba(255,51,85,0.4)';
+        btn.title = 'Dify v' + (dify.version||'?') + ': ' + (dify.ok ? 'ONLINE' : 'OFFLINE');
+      }
+    });
+  } catch(e) {}
+}
+setInterval(checkN8nDifyStatus, 20000);
+setTimeout(checkN8nDifyStatus, 3000);
