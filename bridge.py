@@ -478,7 +478,7 @@ def iris_get_dreams(approved: bool = False):
 
 N8N_BASE    = "http://localhost:5678"
 N8N_API_KEY_ENV = os.environ.get("N8N_API_KEY", "")
-DIFY_BASE   = "http://localhost:5001"
+DIFY_BASE   = "http://localhost:80"
 DIFY_API_KEY = os.environ.get("DIFY_API_KEY", "")
 
 class N8nWebhookReq(BaseModel):
@@ -568,7 +568,7 @@ def dify_chat(req: DifyChatReq):
         r = _rq.post(f"{DIFY_BASE}/v1/chat-messages",
             headers={"Authorization": f"Bearer {req.app_id}",
                      "Content-Type": "application/json"},
-            json=payload, timeout=30)
+            json=payload, timeout=120)
         if r.status_code == 200:
             data = r.json()
             return {"ok": True, "answer": data.get("answer",""),
