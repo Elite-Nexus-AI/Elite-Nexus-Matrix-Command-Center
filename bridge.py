@@ -477,6 +477,7 @@ def iris_get_dreams(approved: bool = False):
 # ═══════════════════════════════════════════════════════
 
 N8N_BASE    = "http://localhost:5678"
+N8N_API_KEY_ENV = os.environ.get("N8N_API_KEY", "")
 DIFY_BASE   = "http://localhost:5001"
 DIFY_API_KEY = os.environ.get("DIFY_API_KEY", "")
 
@@ -505,7 +506,7 @@ def n8n_workflows():
     try:
         import requests as _rq
         r = _rq.get(f"{N8N_BASE}/api/v1/workflows",
-            headers={"X-N8N-API-KEY": os.environ.get("N8N_API_KEY","")}, timeout=8)
+            headers={"X-N8N-API-KEY": N8N_API_KEY_ENV}, timeout=8)
         if r.status_code == 200:
             data = r.json()
             workflows = data.get("data", [])
