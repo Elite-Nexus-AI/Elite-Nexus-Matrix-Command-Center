@@ -84,7 +84,7 @@
       "path": "bridge.py.golden",
       "type": "other",
       "color": "#444444",
-      "size": 75869,
+      "size": 79470,
       "imports": []
     },
     {
@@ -98,6 +98,19 @@
     },
     {
       "id": 9,
+      "label": "screen_ocr.py",
+      "path": "screen_ocr.py",
+      "type": "python",
+      "color": "#00ff88",
+      "size": 2191,
+      "imports": [
+        "import subprocess, time, requests, os, json, tempfile",
+        "from pathlib import Path",
+        "import easyocr"
+      ]
+    },
+    {
+      "id": 10,
       "label": "index.html.backup",
       "path": "index.html.backup",
       "type": "other",
@@ -106,34 +119,34 @@
       "imports": []
     },
     {
-      "id": 10,
+      "id": 11,
       "label": "start_wake.sh",
       "path": "start_wake.sh",
       "type": "shell",
       "color": "#aa44ff",
-      "size": 460,
-      "imports": []
-    },
-    {
-      "id": 11,
-      "label": "start-matrix.sh",
-      "path": "start-matrix.sh",
-      "type": "shell",
-      "color": "#aa44ff",
-      "size": 2092,
+      "size": 580,
       "imports": []
     },
     {
       "id": 12,
-      "label": "index.html.golden",
-      "path": "index.html.golden",
-      "type": "other",
-      "color": "#444444",
-      "size": 164554,
+      "label": "start-matrix.sh",
+      "path": "start-matrix.sh",
+      "type": "shell",
+      "color": "#aa44ff",
+      "size": 556,
       "imports": []
     },
     {
       "id": 13,
+      "label": "index.html.golden",
+      "path": "index.html.golden",
+      "type": "other",
+      "color": "#444444",
+      "size": 169938,
+      "imports": []
+    },
+    {
+      "id": 14,
       "label": "MATRIX_OS_PROJECT_GUIDE.md",
       "path": "MATRIX_OS_PROJECT_GUIDE.md",
       "type": "docs",
@@ -142,7 +155,7 @@
       "imports": []
     },
     {
-      "id": 14,
+      "id": 15,
       "label": "llm_router.py",
       "path": "llm_router.py",
       "type": "router",
@@ -159,7 +172,7 @@
       ]
     },
     {
-      "id": 15,
+      "id": 16,
       "label": "fix-audio.sh",
       "path": "fix-audio.sh",
       "type": "shell",
@@ -168,7 +181,7 @@
       "imports": []
     },
     {
-      "id": 16,
+      "id": 17,
       "label": "start_vllm.sh",
       "path": "start_vllm.sh",
       "type": "shell",
@@ -177,7 +190,7 @@
       "imports": []
     },
     {
-      "id": 17,
+      "id": 18,
       "label": "index_v2.html",
       "path": "index_v2.html",
       "type": "frontend",
@@ -186,7 +199,7 @@
       "imports": []
     },
     {
-      "id": 18,
+      "id": 19,
       "label": "bridge_v2.py",
       "path": "bridge_v2.py",
       "type": "python",
@@ -206,7 +219,7 @@
       ]
     },
     {
-      "id": 19,
+      "id": 20,
       "label": "bridge.py.backup",
       "path": "bridge.py.backup",
       "type": "other",
@@ -215,7 +228,7 @@
       "imports": []
     },
     {
-      "id": 20,
+      "id": 21,
       "label": "index.html.bak2",
       "path": "index.html.bak2",
       "type": "other",
@@ -224,16 +237,16 @@
       "imports": []
     },
     {
-      "id": 21,
+      "id": 22,
       "label": "nexus_graph.json",
       "path": "nexus_graph.json",
       "type": "config",
       "color": "#0088ff",
-      "size": 8101,
+      "size": 8846,
       "imports": []
     },
     {
-      "id": 22,
+      "id": 23,
       "label": "config.sh",
       "path": "config.sh",
       "type": "shell",
@@ -242,7 +255,7 @@
       "imports": []
     },
     {
-      "id": 23,
+      "id": 24,
       "label": "README.md",
       "path": "README.md",
       "type": "docs",
@@ -251,7 +264,7 @@
       "imports": []
     },
     {
-      "id": 24,
+      "id": 25,
       "label": "deploy.sh",
       "path": "deploy.sh",
       "type": "shell",
@@ -260,23 +273,25 @@
       "imports": []
     },
     {
-      "id": 25,
+      "id": 26,
       "label": "wake_word.py",
       "path": "wake_word.py",
       "type": "python",
       "color": "#00ff88",
-      "size": 1686,
+      "size": 2007,
       "imports": [
-        "import whisper, pyaudio, numpy as np, struct, time, requests, threading, sys, os"
+        "import os",
+        "import pyaudio, numpy as np, time, requests, sys",
+        "from faster_whisper import WhisperModel"
       ]
     },
     {
-      "id": 26,
+      "id": 27,
       "label": "bridge.py",
       "path": "bridge.py",
       "type": "core",
       "color": "#00e5ff",
-      "size": 78287,
+      "size": 79470,
       "imports": [
         "from __future__ import annotations",
         "import asyncio, base64, io, json, os, re, subprocess, tempfile, time, wave",
@@ -291,7 +306,7 @@
       ]
     },
     {
-      "id": 27,
+      "id": 28,
       "label": "start_vllm.sh.golden",
       "path": "start_vllm.sh.golden",
       "type": "other",
@@ -300,16 +315,25 @@
       "imports": []
     },
     {
-      "id": 28,
+      "id": 29,
+      "label": "index.html.pre-redesign",
+      "path": "index.html.pre-redesign",
+      "type": "other",
+      "color": "#444444",
+      "size": 179767,
+      "imports": []
+    },
+    {
+      "id": 30,
       "label": "index.html",
       "path": "index.html",
       "type": "core",
       "color": "#ff00ff",
-      "size": 164554,
+      "size": 184055,
       "imports": []
     },
     {
-      "id": 29,
+      "id": 31,
       "label": "llm_usage.json",
       "path": "data/llm_usage.json",
       "type": "config",
@@ -318,7 +342,7 @@
       "imports": []
     },
     {
-      "id": 30,
+      "id": 32,
       "label": "agents.json",
       "path": "data/agents.json",
       "type": "config",
@@ -330,54 +354,54 @@
   "edges": [
     {
       "id": 0,
-      "source": 26,
-      "target": 14,
+      "source": 27,
+      "target": 15,
       "color": "#00e5ff22"
     },
     {
       "id": 1,
-      "source": 26,
-      "target": 28,
+      "source": 27,
+      "target": 30,
       "color": "#00e5ff22"
     },
     {
       "id": 2,
-      "source": 26,
-      "target": 25,
+      "source": 27,
+      "target": 26,
       "color": "#00e5ff22"
     },
     {
       "id": 3,
-      "source": 26,
+      "source": 27,
       "target": 3,
       "color": "#00e5ff22"
     },
     {
       "id": 4,
+      "source": 12,
+      "target": 27,
+      "color": "#00e5ff22"
+    },
+    {
+      "id": 5,
+      "source": 12,
+      "target": 17,
+      "color": "#00e5ff22"
+    },
+    {
+      "id": 6,
       "source": 11,
       "target": 26,
       "color": "#00e5ff22"
     },
     {
-      "id": 5,
-      "source": 11,
-      "target": 16,
-      "color": "#00e5ff22"
-    },
-    {
-      "id": 6,
-      "source": 10,
-      "target": 25,
-      "color": "#00e5ff22"
-    },
-    {
       "id": 7,
-      "source": 10,
+      "source": 11,
       "target": 3,
       "color": "#00e5ff22"
     }
   ],
   "repo": "/home/matrix/Downloads/files/matrix-hud-perfect",
-  "total_files": 31,
+  "total_files": 33,
   "total_edges": 8
 }

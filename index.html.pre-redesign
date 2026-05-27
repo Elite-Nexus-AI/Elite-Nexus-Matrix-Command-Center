@@ -45,16 +45,15 @@ body{
 /* HUD TILE */
 .tile{
   position:relative;display:flex;flex-direction:column;
-  background:linear-gradient(135deg,rgba(1,3,10,0.94),rgba(3,6,18,0.96));
-  border:1px solid rgba(0,229,255,0.2);
-  box-shadow:inset 0 0 40px rgba(0,0,0,0.7),0 0 15px rgba(0,229,255,0.04),inset 0 1px 0 rgba(0,229,255,0.08);
+  background:linear-gradient(135deg,rgba(0,0,0,0.88),rgba(3,6,18,0.94));
+  border:1px solid oklch(0.85 0.18 200/0.35);
+  box-shadow:inset 0 0 24px oklch(0.85 0.18 200/0.06),0 0 24px oklch(0.85 0.18 200/0.08),0 0 1px oklch(0.85 0.18 200/0.6);
   backdrop-filter:blur(6px);border-radius:2px;overflow:hidden;height:100%;
 }
 .tile::before,.tile::after{content:"";position:absolute;width:14px;height:14px;border-style:solid;border-color:var(--cyan);z-index:10;}
 .tile::before{top:-1px;left:-1px;border-width:1px 0 0 1px;}
 .tile::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0;}
-.tile-m{border-color:rgba(255,0,255,0.35);box-shadow:inset 0 0 40px rgba(0,0,0,0.7),0 0 15px rgba(255,0,255,0.06);}
-.tile-m::before,.tile-m::after{border-color:rgba(255,0,255,0.5)}
+.tile-m{border-color:oklch(0.7 0.28 330/0.45);box-shadow:inset 0 0 24px oklch(0.7 0.28 330/0.08),0 0 24px oklch(0.7 0.28 330/0.1);}
 .tile-m::before,.tile-m::after{border-color:var(--mag);}
 .th{display:flex;align-items:center;justify-content:space-between;padding:6px 10px 5px;border-bottom:1px solid oklch(0.85 0.18 200/0.18);font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.3em;flex-shrink:0;}
 .th-c{color:var(--cyan)}.th-m{color:var(--mag)}.th-s{color:var(--muted-fg)}
@@ -86,7 +85,7 @@ body{
 .bridge-dot{width:8px;height:8px;border-radius:50%;}
 .icon-btn{padding:3px 8px;border:1px solid oklch(0.85 0.18 200/0.35);border-radius:2px;background:none;cursor:pointer;color:var(--muted-fg);font-family:'JetBrains Mono',monospace;font-size:10px;display:flex;align-items:center;gap:5px;transition:color .2s,border-color .2s;}
 .icon-btn:hover{color:var(--cyan);border-color:var(--cyan);}
-#hud{flex:1;display:grid;gap:10px;padding:10px;min-height:0;overflow:auto;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr);grid-template-rows:auto auto 1fr auto auto auto auto auto;}
+#hud{flex:1;display:grid;gap:14px;padding:14px;min-height:0;overflow:auto;grid-template-columns:minmax(280px,1.05fr) minmax(0,1.35fr) minmax(280px,1.05fr);grid-template-rows:auto auto 1fr;}
 /* GPU */
 .gpu-body{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;flex:1;}
 .gpu-bars{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
@@ -174,10 +173,10 @@ body{
 .send-btn:active{transform:scale(.97)}.send-btn:disabled{opacity:.4}
 .rec-dot{position:absolute;top:-4px;right:-4px;width:8px;height:8px;border-radius:50%;background:var(--danger);box-shadow:0 0 8px var(--danger);}
 /* CENTER LOGO */
-#logo-wrap{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;user-select:none;pointer-events:none;width:100%;height:100%;max-width:320px;}
+#logo-wrap{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;user-select:none;pointer-events:none;width:320px;height:380px;}
 #logo-bg{position:absolute;animation:rotateSlow 22s linear infinite;filter:drop-shadow(0 0 12px var(--cyan));}
 #logo-eq{position:absolute;}
-#logo-img-w{position:relative;z-index:10;width:180px;height:180px;animation:heartbeat 1.6s var(--ease-io) infinite;transition:filter .4s var(--ease-out);filter:drop-shadow(0 0 18px var(--cyan)) drop-shadow(0 0 44px oklch(0.85 0.18 200/0.45));}
+#logo-img-w{position:relative;z-index:10;width:240px;height:240px;animation:heartbeat 1.6s var(--ease-io) infinite;transition:filter .4s var(--ease-out);filter:drop-shadow(0 0 18px var(--cyan)) drop-shadow(0 0 44px oklch(0.85 0.18 200/0.45));}
 #logo-img-w.active{filter:drop-shadow(0 0 24px var(--mag)) drop-shadow(0 0 60px oklch(0.7 0.28 330/0.55));}
 #logo-img{width:100%;height:100%;object-fit:contain;}
 #logo-status{position:absolute;bottom:6px;left:0;right:0;text-align:center;font-family:'JetBrains Mono',monospace;}
@@ -199,8 +198,8 @@ body{
 .btn-m{border-color:var(--mag);color:var(--mag);box-shadow:0 0 8px oklch(0.7 0.28 330/0.3);}
 .btn-dim{border-color:oklch(0.5 0.04 220);color:oklch(0.7 0.04 220);}
 /* Row 2/3 spans */
-.r2{grid-column:1/-1;display:grid;gap:10px;grid-template-columns:1.2fr 1fr 1fr;}
-.r3{grid-column:1/-1;display:grid;gap:10px;grid-template-columns:1fr 1.8fr 1fr;min-height:320px;}
+.r2{grid-column:1/-1;display:grid;gap:14px;grid-template-columns:1.2fr 1fr 1fr;}
+.r3{grid-column:1/-1;display:grid;gap:14px;grid-template-columns:1fr 1.8fr 1fr 1fr;min-height:340px;}
 /* Scrollbar */
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -333,9 +332,6 @@ body{padding-bottom:22px}
 .proj-svc{font-size:6px;padding:1px 4px;border:1px solid #00e5ff18;
   color:#00e5ff55;border-radius:2px;flex-shrink:0}
 .proj-name{flex:1;color:#00e5ffaa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-.r4{grid-column:1/-1;display:grid;gap:12px;grid-template-columns:1fr 1fr 1fr 1fr;min-height:150px;}
-.r5{grid-column:1/-1;display:grid;gap:12px;grid-template-columns:1fr;min-height:40px;}
 </style>
 </head>
 <body>
@@ -343,23 +339,19 @@ body{padding-bottom:22px}
   <div class="scanlines"></div>
 
   <!-- TOP BAR -->
-  <div id="topbar" style="display:flex;flex-direction:column;border-bottom:1px solid rgba(0,229,255,0.15);background:rgba(0,0,0,0.95);backdrop-filter:blur(20px);z-index:50;flex-shrink:0;">
+  <div id="topbar" style="display:flex;align-items:center;justify-content:space-between;gap:0;padding:0 16px;border-bottom:1px solid oklch(0.85 0.18 200/0.25);background:oklch(0.08 0.03 260/0.95);backdrop-filter:blur(12px);z-index:50;flex-shrink:0;height:44px;">
 
-    <!-- ROW 1: BRAND + STATUS -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 16px;border-bottom:1px solid rgba(0,229,255,0.06)">
-      <span class="gc glitch" style="font-size:12px;letter-spacing:4px;white-space:nowrap;text-shadow:0 0 20px rgba(0,229,255,0.4)">ELITE NEXUS // MATRIX HUD</span>
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-size:7px;color:rgba(255,255,255,0.2);letter-spacing:1px">v2.0 · ZORIN OS · I9 · 2× RTX 3090 · 128GB</span>
-        <div style="display:flex;align-items:center;gap:6px">
-          <span class="bridge-dot ticking" id="bridge-dot" style="background:var(--danger);box-shadow:0 0 8px var(--danger);width:7px;height:7px;border-radius:50%;flex-shrink:0"></span>
-          <span id="bridge-status" style="color:var(--danger);font-size:9px;letter-spacing:1px">OFFLINE</span>
-        </div>
-        <span id="tb-date" style="color:rgba(255,255,255,0.3);font-size:9px;letter-spacing:1px"></span>
-        <span id="tb-time" class="gc" style="font-size:11px;letter-spacing:1px"></span>
+    <!-- LEFT: BRAND -->
+    <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
+      <span class="gc glitch" style="font-size:11px;letter-spacing:3px;white-space:nowrap">ELITE NEXUS // MATRIX</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="bridge-dot ticking" id="bridge-dot" style="background:var(--danger);box-shadow:0 0 8px var(--danger);width:7px;height:7px;border-radius:50%;flex-shrink:0"></span>
+        <span id="bridge-status" style="color:var(--danger);font-size:9px;letter-spacing:1px">OFFLINE</span>
       </div>
     </div>
-    <!-- ROW 2: NAV BUTTONS -->
-    <nav style="display:flex;align-items:center;gap:3px;padding:5px 16px;flex-wrap:wrap">
+
+    <!-- CENTER: NAV MENU -->
+    <nav style="display:flex;align-items:center;gap:2px;flex:1;justify-content:center">
       <div class="nav-group">
         <button class="nav-btn" onclick="openProjectModal()">📋 PROJECTS</button>
       </div>
@@ -425,8 +417,7 @@ body{padding-bottom:22px}
   <!-- HUD GRID -->
   <div id="hud" style="display:none">
     <!-- Row 1 -->
-    <div style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:10px;align-items:stretch;">
-    <div style="display:flex;flex-direction:column">
+    <div style="min-height:260px;display:flex;flex-direction:column">
       <div class="tile sweep" style="flex:1" id="gpu0-tile">
         <div class="th"><span class="th-c" id="gpu0-title">GPU 0 • RTX 3090</span><span class="th-s" id="gpu0-fan">0% FAN</span></div>
         <div class="gpu-body">
@@ -440,13 +431,13 @@ body{padding-bottom:22px}
       </div>
     </div>
 
-    <div style="display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:center;position:relative;min-height:300px">
       <div id="logo-wrap">
-        <svg id="logo-bg" width="240" height="240" viewBox="0 0 320 320">
+        <svg id="logo-bg" width="320" height="320" viewBox="0 0 320 320">
           <circle cx="160" cy="160" r="150" fill="none" stroke="oklch(0.85 0.18 200/0.25)" stroke-width=".6" stroke-dasharray="2 6"/>
           <circle cx="160" cy="160" r="138" fill="none" stroke="oklch(0.7 0.28 330/0.35)" stroke-width=".6" stroke-dasharray="1 8"/>
         </svg>
-        <svg id="logo-eq" width="240" height="240" viewBox="0 0 320 320" aria-hidden="true"></svg>
+        <svg id="logo-eq" width="320" height="320" viewBox="0 0 320 320" aria-hidden="true"></svg>
         <div id="logo-img-w">
           <svg id="cyber-heart" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
             <defs>
@@ -646,7 +637,7 @@ body{padding-bottom:22px}
       </div>
     </div>
 
-    <div style="display:flex;flex-direction:column">
+    <div style="min-height:260px;display:flex;flex-direction:column">
       <div class="tile tile-m sweep" style="flex:1" id="gpu1-tile">
         <div class="th"><span class="th-m" id="gpu1-title">GPU 1 • RTX 3090</span><span class="th-s" id="gpu1-fan">0% FAN</span></div>
         <div class="gpu-body">
@@ -659,7 +650,6 @@ body{padding-bottom:22px}
         </div>
       </div>
     </div>
-    </div><!-- end row 1 -->
 
     <!-- Row 2 -->
     <div class="r2">
@@ -3159,97 +3149,7 @@ setTimeout(function(){
 .ingestor-log-item .ok{color:#00ff88}
 
 .r4{grid-column:1/-1;display:grid;gap:12px;grid-template-columns:1fr 1fr 1fr 1fr;min-height:150px;}
-.r5{grid-column:1/-1;display:grid;gap:12px;grid-template-columns:1fr;}
-/* ── MATRIX OS GLOBAL EFFECTS ──────────────────────────────── */
-@keyframes rotateSlow{to{transform:rotate(360deg)}}
-@keyframes cornerPulse{0%,100%{opacity:.5}50%{opacity:1}}
-@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
-@keyframes neonFlicker{0%,95%,100%{opacity:1}96%,98%{opacity:.4}}
-@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulseGlow{0%,100%{box-shadow:0 0 6px currentColor}50%{box-shadow:0 0 18px currentColor,0 0 30px currentColor}}
-
-/* scanline overlay */
-#hud::before{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
-  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,229,255,0.015) 2px,rgba(0,229,255,0.015) 4px);
-}
-
-/* tile corner animation */
-.tile::before,.tile-m::before{animation:cornerPulse 3s ease-in-out infinite}
-.tile::after,.tile-m::after{animation:cornerPulse 3s ease-in-out infinite reverse}
-
-/* glowing status dots */
-.status-dot-online{background:#00ff88;box-shadow:0 0 6px #00ff88,0 0 12px #00ff8866;animation:pulseGlow 2s ease-in-out infinite}
-.status-dot-idle{background:#ffd700;box-shadow:0 0 6px #ffd700}
-.status-dot-offline{background:rgba(255,255,255,0.15)}
-
-/* card flip */
-.card-wrap-hud{perspective:800px}
-.card-inner-hud{transform-style:preserve-3d;transition:transform .48s cubic-bezier(.4,0,.2,1)}
-.card-wrap-hud.flipped .card-inner-hud{transform:rotateY(180deg)}
-.card-front,.card-back-hud{backface-visibility:hidden;position:absolute;width:100%;height:100%;border-radius:5px;overflow:hidden}
-.card-back-hud{transform:rotateY(180deg)}
-
-/* glass input fields */
-.glass-input{
-  background:rgba(0,0,0,0.65);
-  border:1px solid rgba(0,229,255,0.18);
-  border-radius:3px;
-  color:#ffffff;
-  font-family:'JetBrains Mono',monospace;
-  transition:border-color .2s,box-shadow .2s;
-}
-.glass-input:focus{
-  outline:none;
-  border-color:rgba(0,229,255,0.5);
-  box-shadow:0 0 12px rgba(0,229,255,0.15);
-}
-.glass-select{
-  background:rgba(0,0,0,0.65);
-  border:1px solid rgba(0,229,255,0.15);
-  border-radius:3px;
-  color:rgba(255,255,255,0.75);
-  font-family:'JetBrains Mono',monospace;
-}
-
-/* nav button hover glow */
-.nav-btn{transition:all .15s}
-.nav-btn:hover{
-  color:#00e5ff;
-  border-color:rgba(0,229,255,0.5);
-  box-shadow:0 0 8px rgba(0,229,255,0.2),inset 0 0 8px rgba(0,229,255,0.05);
-}
-
-/* tile header glow line */
-.th,.th-m,.th-a,.th-g,.th-gold,.th-d{
-  position:relative;
-}
-.th::after,.th-m::after{
-  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,currentColor,transparent);
-  opacity:0.15;
-}
-
-/* heartbeat animation for bridge dot */
-@keyframes heartbeat{0%,100%{transform:scale(1)}15%{transform:scale(1.25)}30%{transform:scale(1)}45%{transform:scale(1.15)}70%{transform:scale(1)}}
-#bridge-dot{animation:heartbeat 1.8s ease-in-out infinite}
-
-/* factory progress bar shimmer */
-@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-.factory-bar-active{
-  background:linear-gradient(90deg,#00e5ff44,#00e5ff,#00ff88,#00e5ff44);
-  background-size:200% 100%;
-  animation:shimmer 2s linear infinite;
-}
-
-/* dream rings */
-@keyframes dreamSpin{to{transform:rotate(360deg)}}
-.dream-ring{
-  position:absolute;border-radius:50%;border:1px solid;
-  animation:dreamSpin linear infinite;
-  transform-origin:center center;
-}
-</style>
+.r5{grid-column:1/-1;display:grid;gap:12px;grid-template-columns:1fr;}</style>
 
 <script>
 function addIngestorLog(name, status, chunks){
