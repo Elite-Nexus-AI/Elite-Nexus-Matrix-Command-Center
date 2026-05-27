@@ -730,7 +730,7 @@ body{padding-bottom:22px}
           <div class="cmd-bar">
             <button class="cmd-btn" id="mic-btn"
               style="border-color:var(--cyan);box-shadow:0 0 8px var(--cyan);background:oklch(0.85 0.18 200/0.06)"
-              onclick="(window.toggleMic||function(){})() " title="Mic / hold SPACE">
+              onclick="toggleMic()" title="Mic / hold SPACE">
               <svg id="mic-icon" class="svg-icon" viewBox="0 0 24 24" style="color:var(--cyan)">
                 <rect x="9" y="3" width="6" height="10" rx="3"/><path d="M19 10a7 7 0 0 1-14 0M12 19v2M8 22h8"/>
               </svg>
@@ -1664,7 +1664,7 @@ function setRecording(on){
   if(on){btn.style.borderColor='var(--danger)';btn.style.boxShadow='0 0 12px var(--danger)';btn.style.background='oklch(0.7 0.25 25/0.15)';icon.innerHTML='<rect x="6" y="6" width="12" height="12" rx="1"/>';icon.style.color='var(--danger)';const d=document.createElement('span');d.className='rec-dot ticking';btn.appendChild(d);updateChatStatus('DICTATING');setMatrixActive(true);}
   else{btn.style.borderColor='var(--cyan)';btn.style.boxShadow='0 0 8px var(--cyan)';btn.style.background='oklch(0.85 0.18 200/0.06)';icon.innerHTML='<rect x="9" y="3" width="6" height="10" rx="3"/><path d="M19 10a7 7 0 0 1-14 0M12 19v2M8 22h8"/>';icon.style.color='var(--cyan)';if(!streaming){updateChatStatus('READY');setMatrixActive(false);}}
 }
-window.addEventListener('keydown',e=>{if(e.code!=='Space'||e.repeat)return;const t=e.target;if(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)return;if(pttHeld)return;e.preventDefault();pttHeld=true;var _tm = window.startRecording || startRecording; if(!recording && _tm) _tm();});
+window.addEventListener('keydown',e=>{if(e.code!=='Space'||e.repeat)return;const t=e.target;if(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)return;if(pttHeld)return;e.preventDefault();pttHeld=true;if(!recording)startRecording();});
 window.addEventListener('keyup',e=>{if(e.code!=='Space')return;if(!pttHeld)return;e.preventDefault();pttHeld=false;if(recording)stopRecording();});
 
 /* ═══════════════════════════════════════════════════════════
@@ -2838,9 +2838,6 @@ document.addEventListener('DOMContentLoaded', function(){
   setTimeout(function(){
     // Expose all nav button functions globally
     if(typeof toggleIngestor === 'function') window.toggleIngestor = toggleIngestor;
-    if(typeof toggleMic === 'function') window.toggleMic = toggleMic;
-    if(typeof startRecording === 'function') window.startRecording = startRecording;
-    if(typeof stopRecording === 'function') window.stopRecording = stopRecording;
     if(typeof generateDailySummary === 'function') window.generateDailySummary = generateDailySummary;
     if(typeof cfoBrief === 'function') window.cfoBrief = cfoBrief;
     if(typeof loadVaultFiles === 'function') window.loadVaultFiles = loadVaultFiles;
@@ -2851,15 +2848,7 @@ document.addEventListener('DOMContentLoaded', function(){
 // Safe wrappers that wait for functions to be ready
 function navToggleIngestor(){
   var el = document.getElementById('ingestor-zone');
-  if(!el){ console.warn('ingestor-zone not found'); return; }
-  var isOpen = el.style.display === 'block';
-  if(isOpen){
-    el.style.display = 'none';
-    el.classList.remove('open');
-  } else {
-    el.style.cssText = 'position:fixed !important;top:100px !important;left:50% !important;transform:translateX(-50%) !important;width:440px !important;background:#0a0d18 !important;border:1px solid #ff00ff50 !important;border-radius:5px !important;z-index:99999 !important;display:block !important;box-shadow:0 0 30px #ff00ff20;';
-    el.classList.add('open');
-  }
+  if(el){ el.classList.toggle('open'); if(el.classList.contains('open')){ el.style.cssText='position:fixed;top:100px;left:50%;transform:translateX(-50%);width:440px;background:#0a0d18;border:1px solid #ff00ff50;border-radius:5px;z-index:99999;display:block;box-shadow:0 0 30px #ff00ff20,inset 0 0 20px #00000040;'; } else { el.style.display='none'; } }
 }
 function navCfoBrief(){
   if(window.cfoBrief){ window.cfoBrief(); return; }
@@ -3036,104 +3025,6 @@ setTimeout(function(){
     if(typeof updateHeartState === 'function') updateHeartState(online);
   }, 2000);
 }, 3000);
-</script>
-
-<!-- KNOWLEDGE INGESTOR PANEL -->
-<div id="ingestor-zone" style="display:none">
-  <div class="ingestor-hdr">
-    📥 KNOWLEDGE INGESTOR
-    <button onclick="navToggleIngestor()" style="background:transparent;border:none;color:#aa44ff44;cursor:pointer;font-size:10px">✕</button>
-  </div>
-  <div class="ingestor-body">
-    <div class="ingestor-drop" onclick="document.getElementById('ingestor-file-input').click()">
-      <div class="ingestor-drop-title">⬇ DROP FILE OR CLICK TO SELECT</div>
-      <div class="ingestor-drop-sub">Chunks into 450-line chapters → saved to Obsidian vault</div>
-    </div>
-    <input type="file" id="ingestor-file-input" style="display:none" accept=".txt,.md,.pdf" onchange="handleIngestorFile(this)">
-    <div style="display:flex;gap:5px;margin-bottom:6px">
-      <input id="ingestor-url" class="form-input" placeholder="Or paste a URL to ingest..." style="flex:1;font-size:8px;padding:4px 6px">
-      <button onclick="ingestUrl()" style="padding:4px 8px;background:#aa44ff12;border:1px solid #aa44ff25;color:#aa44ff;font-family:inherit;font-size:7px;cursor:pointer;border-radius:2px">FETCH</button>
-    </div>
-    <div style="display:flex;gap:5px;margin-bottom:6px">
-      <input id="ingestor-topic" class="form-input" placeholder="Topic name..." style="flex:1;font-size:8px;padding:4px 6px">
-      <select id="ingestor-vault" style="background:#060d14;border:1px solid #aa44ff18;color:#aa44ff88;font-size:7px;padding:3px 4px;font-family:inherit;border-radius:2px">
-        <option value="knowledge">knowledge vault</option>
-        <option value="production">production vault</option>
-      </select>
-    </div>
-    <div class="ingestor-log" id="ingestor-log"></div>
-  </div>
-</div>
-
-<style>
-#ingestor-zone{
-  position:fixed;top:60px;left:50%;transform:translateX(-50%);
-  width:440px;background:#0a0d18;
-  border:1px solid #aa44ff50;border-radius:5px;
-  z-index:99999;box-shadow:0 0 30px #aa44ff18;
-}
-.ingestor-hdr{display:flex;align-items:center;justify-content:space-between;
-  padding:6px 10px;border-bottom:1px solid #aa44ff18;
-  font-size:8px;letter-spacing:1.5px;color:#aa44ff88;font-weight:bold}
-.ingestor-body{padding:10px}
-.ingestor-drop{background:#060d14;border:1px dashed #aa44ff20;border-radius:3px;
-  padding:12px;text-align:center;margin-bottom:8px;cursor:pointer}
-.ingestor-drop-title{font-size:8px;color:#aa44ff66;font-weight:bold;margin-bottom:2px}
-.ingestor-drop-sub{font-size:6px;color:#ffffff20}
-.ingestor-log{max-height:80px;overflow-y:auto;margin-top:6px}
-.ingestor-log-item{font-size:7px;padding:2px 0;border-bottom:1px solid #aa44ff08;
-  display:flex;justify-content:space-between;color:#ffffff44}
-.ingestor-log-item .ok{color:#00ff88}
-</style>
-
-<script>
-function addIngestorLog(name, status, chunks){
-  var log=document.getElementById('ingestor-log');
-  if(!log)return;
-  var div=document.createElement('div');
-  div.className='ingestor-log-item';
-  div.innerHTML='<span>'+name.substring(0,35)+'</span><span class="'+(status==='ok'?'ok':'proc')+'">'+
-    (status==='ok'?'+ '+chunks+' chunks':'processing...')+'</span>';
-  log.insertBefore(div, log.firstChild);
-}
-async function ingestText(text, topic, vault){
-  var v=vault||document.getElementById('ingestor-vault').value;
-  var t=topic||(document.getElementById('ingestor-topic').value.trim()||'untitled-'+Date.now());
-  addIngestorLog(t,'proc',0);
-  try{
-    var r=await fetch('/ingest/text',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({text:text,topic:t,vault:v})});
-    var d=await r.json();
-    if(d.ok){ addIngestorLog(t,'ok',d.chunks);
-      if(typeof addMsg==='function') addMsg('system','Ingested: '+t+' -> '+d.chunks+' chunks -> '+v+' vault');
-    }
-  }catch(e){ console.warn(e); }
-}
-async function ingestUrl(){
-  var url=document.getElementById('ingestor-url').value.trim();
-  if(!url)return;
-  var t=document.getElementById('ingestor-topic').value.trim()||url.split('/')[2];
-  var v=document.getElementById('ingestor-vault').value;
-  addIngestorLog(url,'proc',0);
-  try{
-    var r=await fetch('/ingest/url',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({url:url,topic:t,vault:v})});
-    var d=await r.json();
-    if(d.ok){ addIngestorLog(t,'ok',d.chunks);
-      if(typeof addMsg==='function') addMsg('system','URL ingested: '+t+' -> '+d.chunks+' chunks');
-      document.getElementById('ingestor-url').value='';
-    }
-  }catch(e){ console.warn(e); }
-}
-function handleIngestorFile(input){
-  var file=input.files[0]; if(!file)return;
-  var topic=document.getElementById('ingestor-topic').value.trim()||file.name.replace(/\.[^.]+$/,'');
-  var vault=document.getElementById('ingestor-vault').value;
-  var reader=new FileReader();
-  reader.onload=function(e){ ingestText(e.target.result,topic,vault); };
-  reader.readAsText(file);
-  input.value='';
-}
 </script>
 </body>
 </html>

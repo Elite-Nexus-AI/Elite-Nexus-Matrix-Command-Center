@@ -142,7 +142,7 @@
       "path": "index.html.golden",
       "type": "other",
       "color": "#444444",
-      "size": 169938,
+      "size": 164554,
       "imports": []
     },
     {
@@ -229,6 +229,15 @@
     },
     {
       "id": 21,
+      "label": "modules.js",
+      "path": "modules.js",
+      "type": "other",
+      "color": "#444444",
+      "size": 67694,
+      "imports": []
+    },
+    {
+      "id": 22,
       "label": "index.html.bak2",
       "path": "index.html.bak2",
       "type": "other",
@@ -237,16 +246,16 @@
       "imports": []
     },
     {
-      "id": 22,
+      "id": 23,
       "label": "nexus_graph.json",
       "path": "nexus_graph.json",
       "type": "config",
       "color": "#0088ff",
-      "size": 8846,
+      "size": 9022,
       "imports": []
     },
     {
-      "id": 23,
+      "id": 24,
       "label": "config.sh",
       "path": "config.sh",
       "type": "shell",
@@ -255,7 +264,7 @@
       "imports": []
     },
     {
-      "id": 24,
+      "id": 25,
       "label": "README.md",
       "path": "README.md",
       "type": "docs",
@@ -264,7 +273,7 @@
       "imports": []
     },
     {
-      "id": 25,
+      "id": 26,
       "label": "deploy.sh",
       "path": "deploy.sh",
       "type": "shell",
@@ -273,7 +282,7 @@
       "imports": []
     },
     {
-      "id": 26,
+      "id": 27,
       "label": "wake_word.py",
       "path": "wake_word.py",
       "type": "python",
@@ -286,12 +295,12 @@
       ]
     },
     {
-      "id": 27,
+      "id": 28,
       "label": "bridge.py",
       "path": "bridge.py",
       "type": "core",
       "color": "#00e5ff",
-      "size": 79470,
+      "size": 79595,
       "imports": [
         "from __future__ import annotations",
         "import asyncio, base64, io, json, os, re, subprocess, tempfile, time, wave",
@@ -306,7 +315,7 @@
       ]
     },
     {
-      "id": 28,
+      "id": 29,
       "label": "start_vllm.sh.golden",
       "path": "start_vllm.sh.golden",
       "type": "other",
@@ -315,7 +324,7 @@
       "imports": []
     },
     {
-      "id": 29,
+      "id": 30,
       "label": "index.html.pre-redesign",
       "path": "index.html.pre-redesign",
       "type": "other",
@@ -324,16 +333,16 @@
       "imports": []
     },
     {
-      "id": 30,
+      "id": 31,
       "label": "index.html",
       "path": "index.html",
       "type": "core",
       "color": "#ff00ff",
-      "size": 184055,
+      "size": 179799,
       "imports": []
     },
     {
-      "id": 31,
+      "id": 32,
       "label": "llm_usage.json",
       "path": "data/llm_usage.json",
       "type": "config",
@@ -342,7 +351,7 @@
       "imports": []
     },
     {
-      "id": 32,
+      "id": 33,
       "label": "agents.json",
       "path": "data/agents.json",
       "type": "config",
@@ -354,32 +363,32 @@
   "edges": [
     {
       "id": 0,
-      "source": 27,
+      "source": 28,
       "target": 15,
       "color": "#00e5ff22"
     },
     {
       "id": 1,
-      "source": 27,
-      "target": 30,
+      "source": 28,
+      "target": 31,
       "color": "#00e5ff22"
     },
     {
       "id": 2,
-      "source": 27,
-      "target": 26,
+      "source": 28,
+      "target": 27,
       "color": "#00e5ff22"
     },
     {
       "id": 3,
-      "source": 27,
+      "source": 28,
       "target": 3,
       "color": "#00e5ff22"
     },
     {
       "id": 4,
       "source": 12,
-      "target": 27,
+      "target": 28,
       "color": "#00e5ff22"
     },
     {
@@ -391,7 +400,7 @@
     {
       "id": 6,
       "source": 11,
-      "target": 26,
+      "target": 27,
       "color": "#00e5ff22"
     },
     {
@@ -402,6 +411,6 @@
     }
   ],
   "repo": "/home/matrix/Downloads/files/matrix-hud-perfect",
-  "total_files": 33,
+  "total_files": 34,
   "total_edges": 8
 }

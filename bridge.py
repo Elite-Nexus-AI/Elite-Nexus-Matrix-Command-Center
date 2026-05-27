@@ -238,6 +238,10 @@ def _get_ollama_models():
 def root():
     return FileResponse(ROOT / "index.html")
 
+@app.get("/modules.js")
+def modules_js():
+    return FileResponse(ROOT / "modules.js", media_type="application/javascript")
+
 @app.get("/health")
 def health(_=Depends(require_auth)):
     hermes_ok = False

@@ -45,16 +45,15 @@ body{
 /* HUD TILE */
 .tile{
   position:relative;display:flex;flex-direction:column;
-  background:linear-gradient(135deg,rgba(1,3,10,0.94),rgba(3,6,18,0.96));
-  border:1px solid rgba(0,229,255,0.2);
-  box-shadow:inset 0 0 40px rgba(0,0,0,0.7),0 0 15px rgba(0,229,255,0.04),inset 0 1px 0 rgba(0,229,255,0.08);
+  background:linear-gradient(135deg,oklch(0.18 0.04 260/0.7),oklch(0.12 0.03 260/0.6));
+  border:1px solid oklch(0.85 0.18 200/0.35);
+  box-shadow:inset 0 0 24px oklch(0.85 0.18 200/0.06),0 0 24px oklch(0.85 0.18 200/0.08),0 0 1px oklch(0.85 0.18 200/0.6);
   backdrop-filter:blur(6px);border-radius:2px;overflow:hidden;height:100%;
 }
 .tile::before,.tile::after{content:"";position:absolute;width:14px;height:14px;border-style:solid;border-color:var(--cyan);z-index:10;}
 .tile::before{top:-1px;left:-1px;border-width:1px 0 0 1px;}
 .tile::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0;}
-.tile-m{border-color:rgba(255,0,255,0.35);box-shadow:inset 0 0 40px rgba(0,0,0,0.7),0 0 15px rgba(255,0,255,0.06);}
-.tile-m::before,.tile-m::after{border-color:rgba(255,0,255,0.5)}
+.tile-m{border-color:oklch(0.7 0.28 330/0.45);box-shadow:inset 0 0 24px oklch(0.7 0.28 330/0.08),0 0 24px oklch(0.7 0.28 330/0.1);}
 .tile-m::before,.tile-m::after{border-color:var(--mag);}
 .th{display:flex;align-items:center;justify-content:space-between;padding:6px 10px 5px;border-bottom:1px solid oklch(0.85 0.18 200/0.18);font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.3em;flex-shrink:0;}
 .th-c{color:var(--cyan)}.th-m{color:var(--mag)}.th-s{color:var(--muted-fg)}
@@ -86,7 +85,7 @@ body{
 .bridge-dot{width:8px;height:8px;border-radius:50%;}
 .icon-btn{padding:3px 8px;border:1px solid oklch(0.85 0.18 200/0.35);border-radius:2px;background:none;cursor:pointer;color:var(--muted-fg);font-family:'JetBrains Mono',monospace;font-size:10px;display:flex;align-items:center;gap:5px;transition:color .2s,border-color .2s;}
 .icon-btn:hover{color:var(--cyan);border-color:var(--cyan);}
-#hud{flex:1;display:grid;gap:10px;padding:10px;min-height:0;overflow:auto;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr);grid-template-rows:auto auto 1fr auto auto auto auto auto;}
+#hud{flex:1;display:grid;gap:14px;padding:14px;min-height:0;overflow:auto;grid-template-columns:minmax(280px,1.05fr) minmax(0,1.35fr) minmax(280px,1.05fr);grid-template-rows:auto auto 1fr;}
 /* GPU */
 .gpu-body{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;flex:1;}
 .gpu-bars{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
@@ -174,10 +173,10 @@ body{
 .send-btn:active{transform:scale(.97)}.send-btn:disabled{opacity:.4}
 .rec-dot{position:absolute;top:-4px;right:-4px;width:8px;height:8px;border-radius:50%;background:var(--danger);box-shadow:0 0 8px var(--danger);}
 /* CENTER LOGO */
-#logo-wrap{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;user-select:none;pointer-events:none;width:100%;height:100%;max-width:320px;}
+#logo-wrap{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;user-select:none;pointer-events:none;width:320px;height:380px;}
 #logo-bg{position:absolute;animation:rotateSlow 22s linear infinite;filter:drop-shadow(0 0 12px var(--cyan));}
 #logo-eq{position:absolute;}
-#logo-img-w{position:relative;z-index:10;width:180px;height:180px;animation:heartbeat 1.6s var(--ease-io) infinite;transition:filter .4s var(--ease-out);filter:drop-shadow(0 0 18px var(--cyan)) drop-shadow(0 0 44px oklch(0.85 0.18 200/0.45));}
+#logo-img-w{position:relative;z-index:10;width:240px;height:240px;animation:heartbeat 1.6s var(--ease-io) infinite;transition:filter .4s var(--ease-out);filter:drop-shadow(0 0 18px var(--cyan)) drop-shadow(0 0 44px oklch(0.85 0.18 200/0.45));}
 #logo-img-w.active{filter:drop-shadow(0 0 24px var(--mag)) drop-shadow(0 0 60px oklch(0.7 0.28 330/0.55));}
 #logo-img{width:100%;height:100%;object-fit:contain;}
 #logo-status{position:absolute;bottom:6px;left:0;right:0;text-align:center;font-family:'JetBrains Mono',monospace;}
@@ -199,8 +198,8 @@ body{
 .btn-m{border-color:var(--mag);color:var(--mag);box-shadow:0 0 8px oklch(0.7 0.28 330/0.3);}
 .btn-dim{border-color:oklch(0.5 0.04 220);color:oklch(0.7 0.04 220);}
 /* Row 2/3 spans */
-.r2{grid-column:1/-1;display:grid;gap:10px;grid-template-columns:1.2fr 1fr 1fr;}
-.r3{grid-column:1/-1;display:grid;gap:10px;grid-template-columns:1fr 1.8fr 1fr;min-height:320px;}
+.r2{grid-column:1/-1;display:grid;gap:14px;grid-template-columns:1.2fr 1fr 1fr;}
+.r3{grid-column:1/-1;display:grid;gap:14px;grid-template-columns:1fr 1.8fr 1fr 1fr;min-height:340px;}
 /* Scrollbar */
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -333,9 +332,6 @@ body{padding-bottom:22px}
 .proj-svc{font-size:6px;padding:1px 4px;border:1px solid #00e5ff18;
   color:#00e5ff55;border-radius:2px;flex-shrink:0}
 .proj-name{flex:1;color:#00e5ffaa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-.r4{grid-column:1/-1;display:grid;gap:12px;grid-template-columns:1fr 1fr 1fr 1fr;min-height:150px;}
-.r5{grid-column:1/-1;display:grid;gap:12px;grid-template-columns:1fr;min-height:40px;}
 </style>
 </head>
 <body>
@@ -343,23 +339,19 @@ body{padding-bottom:22px}
   <div class="scanlines"></div>
 
   <!-- TOP BAR -->
-  <div id="topbar" style="display:flex;flex-direction:column;border-bottom:1px solid rgba(0,229,255,0.15);background:rgba(0,0,0,0.95);backdrop-filter:blur(20px);z-index:50;flex-shrink:0;">
+  <div id="topbar" style="display:flex;align-items:center;justify-content:space-between;gap:0;padding:0 16px;border-bottom:1px solid oklch(0.85 0.18 200/0.25);background:oklch(0.08 0.03 260/0.95);backdrop-filter:blur(12px);z-index:50;flex-shrink:0;height:44px;">
 
-    <!-- ROW 1: BRAND + STATUS -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 16px;border-bottom:1px solid rgba(0,229,255,0.06)">
-      <span class="gc glitch" style="font-size:12px;letter-spacing:4px;white-space:nowrap;text-shadow:0 0 20px rgba(0,229,255,0.4)">ELITE NEXUS // MATRIX HUD</span>
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-size:7px;color:rgba(255,255,255,0.2);letter-spacing:1px">v2.0 · ZORIN OS · I9 · 2× RTX 3090 · 128GB</span>
-        <div style="display:flex;align-items:center;gap:6px">
-          <span class="bridge-dot ticking" id="bridge-dot" style="background:var(--danger);box-shadow:0 0 8px var(--danger);width:7px;height:7px;border-radius:50%;flex-shrink:0"></span>
-          <span id="bridge-status" style="color:var(--danger);font-size:9px;letter-spacing:1px">OFFLINE</span>
-        </div>
-        <span id="tb-date" style="color:rgba(255,255,255,0.3);font-size:9px;letter-spacing:1px"></span>
-        <span id="tb-time" class="gc" style="font-size:11px;letter-spacing:1px"></span>
+    <!-- LEFT: BRAND -->
+    <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
+      <span class="gc glitch" style="font-size:11px;letter-spacing:3px;white-space:nowrap">ELITE NEXUS // MATRIX</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="bridge-dot ticking" id="bridge-dot" style="background:var(--danger);box-shadow:0 0 8px var(--danger);width:7px;height:7px;border-radius:50%;flex-shrink:0"></span>
+        <span id="bridge-status" style="color:var(--danger);font-size:9px;letter-spacing:1px">OFFLINE</span>
       </div>
     </div>
-    <!-- ROW 2: NAV BUTTONS -->
-    <nav style="display:flex;align-items:center;gap:3px;padding:5px 16px;flex-wrap:wrap">
+
+    <!-- CENTER: NAV MENU -->
+    <nav style="display:flex;align-items:center;gap:2px;flex:1;justify-content:center">
       <div class="nav-group">
         <button class="nav-btn" onclick="openProjectModal()">📋 PROJECTS</button>
       </div>
@@ -367,7 +359,6 @@ body{padding-bottom:22px}
         <button class="nav-btn" onclick="openCouncilModal()">🏛 COUNCIL</button>
       </div>
       <div class="nav-group">
-        <button class="nav-btn" onclick="navToggleIngestor()" title="Knowledge Ingestor - drag &amp; drop files/URLs">📥 INGEST</button>
       </div>
       <div class="nav-group">
         <button class="nav-btn" onclick="document.getElementById('agent-roster-panel').classList.toggle('open')" title="Department Head Agents">⬡ AGENTS</button>
@@ -425,8 +416,7 @@ body{padding-bottom:22px}
   <!-- HUD GRID -->
   <div id="hud" style="display:none">
     <!-- Row 1 -->
-    <div style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:10px;align-items:stretch;">
-    <div style="display:flex;flex-direction:column">
+    <div style="min-height:260px;display:flex;flex-direction:column">
       <div class="tile sweep" style="flex:1" id="gpu0-tile">
         <div class="th"><span class="th-c" id="gpu0-title">GPU 0 • RTX 3090</span><span class="th-s" id="gpu0-fan">0% FAN</span></div>
         <div class="gpu-body">
@@ -440,13 +430,13 @@ body{padding-bottom:22px}
       </div>
     </div>
 
-    <div style="display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:center;position:relative;min-height:300px">
       <div id="logo-wrap">
-        <svg id="logo-bg" width="240" height="240" viewBox="0 0 320 320">
+        <svg id="logo-bg" width="320" height="320" viewBox="0 0 320 320">
           <circle cx="160" cy="160" r="150" fill="none" stroke="oklch(0.85 0.18 200/0.25)" stroke-width=".6" stroke-dasharray="2 6"/>
           <circle cx="160" cy="160" r="138" fill="none" stroke="oklch(0.7 0.28 330/0.35)" stroke-width=".6" stroke-dasharray="1 8"/>
         </svg>
-        <svg id="logo-eq" width="240" height="240" viewBox="0 0 320 320" aria-hidden="true"></svg>
+        <svg id="logo-eq" width="320" height="320" viewBox="0 0 320 320" aria-hidden="true"></svg>
         <div id="logo-img-w">
           <svg id="cyber-heart" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
             <defs>
@@ -646,7 +636,7 @@ body{padding-bottom:22px}
       </div>
     </div>
 
-    <div style="display:flex;flex-direction:column">
+    <div style="min-height:260px;display:flex;flex-direction:column">
       <div class="tile tile-m sweep" style="flex:1" id="gpu1-tile">
         <div class="th"><span class="th-m" id="gpu1-title">GPU 1 • RTX 3090</span><span class="th-s" id="gpu1-fan">0% FAN</span></div>
         <div class="gpu-body">
@@ -659,7 +649,6 @@ body{padding-bottom:22px}
         </div>
       </div>
     </div>
-    </div><!-- end row 1 -->
 
     <!-- Row 2 -->
     <div class="r2">
@@ -695,6 +684,43 @@ body{padding-bottom:22px}
             <div class="llm-sub" id="llm-today">today $0.00</div>
           </div>
           <div class="llm-models" id="llm-models"></div>
+        </div>
+        <!-- ── METRICS ROW (moved from footer) ── -->
+        <div style="border-top:1px solid rgba(255,0,255,0.12);padding:7px 10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;flex-shrink:0;background:rgba(0,0,0,0.3)">
+          <div style="text-align:center">
+            <div style="font-size:6.5px;color:rgba(255,255,255,0.35);letter-spacing:.5px;margin-bottom:3px;text-transform:uppercase">Model</div>
+            <div id="llm-model-badge-2" style="font-size:8px;color:#00ff88;font-family:'JetBrains Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">vLLM FREE</div>
+          </div>
+          <div style="text-align:center;border-left:1px solid rgba(255,255,255,0.06);border-right:1px solid rgba(255,255,255,0.06)">
+            <div style="font-size:6.5px;color:rgba(255,255,255,0.35);letter-spacing:.5px;margin-bottom:3px;text-transform:uppercase">Tokens</div>
+            <div id="llm-tokens-2" style="font-size:8px;color:#00e5ff;font-family:'JetBrains Mono',monospace">0</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:6.5px;color:rgba(255,255,255,0.35);letter-spacing:.5px;margin-bottom:3px;text-transform:uppercase">Msg Cost</div>
+            <div id="llm-msg-cost-2" style="font-size:8px;color:#00ff88;font-family:'JetBrains Mono',monospace">$0.000000</div>
+          </div>
+        </div>
+        <div style="border-top:1px solid rgba(255,0,255,0.08);padding:7px 10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;flex-shrink:0;background:rgba(0,0,0,0.2)">
+          <div style="text-align:center">
+            <div style="font-size:6.5px;color:rgba(255,255,255,0.35);letter-spacing:.5px;margin-bottom:3px;text-transform:uppercase">Today Paid</div>
+            <div id="llm-today-paid-2" style="font-size:8px;color:#ffd700;font-family:'JetBrains Mono',monospace">$0.0000</div>
+          </div>
+          <div style="text-align:center;border-left:1px solid rgba(255,255,255,0.06);border-right:1px solid rgba(255,255,255,0.06)">
+            <div style="font-size:6.5px;color:rgba(255,255,255,0.35);letter-spacing:.5px;margin-bottom:3px;text-transform:uppercase">Local Saved</div>
+            <div id="llm-saved-2" style="font-size:8px;color:#00e5ff;font-family:'JetBrains Mono',monospace">$0.0000</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:6.5px;color:rgba(255,255,255,0.35);letter-spacing:.5px;margin-bottom:3px;text-transform:uppercase">Daily Limit</div>
+            <div id="llm-limit-2" style="font-size:8px;color:#00ff88;font-family:'JetBrains Mono',monospace">$5.00</div>
+          </div>
+        </div>
+        <div style="border-top:1px solid rgba(255,0,255,0.08);padding:5px 10px;display:flex;align-items:center;gap:8px;flex-shrink:0;background:rgba(0,0,0,0.3)">
+          <div style="font-size:6.5px;color:rgba(255,255,255,0.35);letter-spacing:.5px;text-transform:uppercase;white-space:nowrap">Daily Budget</div>
+          <div style="flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden">
+            <div id="llm-budget-bar-2" style="height:100%;background:#00ff88;border-radius:2px;width:0%;transition:width .5s"></div>
+          </div>
+          <div id="llm-budget-pct-2" style="font-size:8px;color:#00ff88;font-family:'JetBrains Mono',monospace;white-space:nowrap">0%</div>
+          <button onclick="resetTelemetry()" style="padding:2px 7px;background:transparent;border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.35);font-size:7px;cursor:pointer;border-radius:2px;font-family:'JetBrains Mono',monospace;white-space:nowrap">RESET</button>
         </div>
       </div>
       <div class="tile sweep">
@@ -740,7 +766,7 @@ body{padding-bottom:22px}
           <div class="cmd-bar">
             <button class="cmd-btn" id="mic-btn"
               style="border-color:var(--cyan);box-shadow:0 0 8px var(--cyan);background:oklch(0.85 0.18 200/0.06)"
-              onclick="(window.toggleMic||function(){})() " title="Mic / hold SPACE">
+              onclick="toggleMic()" title="Mic / hold SPACE">
               <svg id="mic-icon" class="svg-icon" viewBox="0 0 24 24" style="color:var(--cyan)">
                 <rect x="9" y="3" width="6" height="10" rx="3"/><path d="M19 10a7 7 0 0 1-14 0M12 19v2M8 22h8"/>
               </svg>
@@ -787,72 +813,139 @@ body{padding-bottom:22px}
         </div>
       </div>
     </div>
+
+    <!-- AGENT ROSTER ROW -->
+    <div class="r-agents" style="grid-column:1/-1;display:flex;flex-direction:column;margin-top:4px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(0,0,0,0.6);border:1px solid rgba(0,255,136,0.25);border-radius:4px 4px 0 0;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:2px">
+        <span style="color:#00ff88">AGENT ROSTER</span>
+        <span style="color:rgba(255,255,255,0.3);font-size:7px" id="roster-count">0 AGENTS</span>
+      </div>
+      <div id="agent-roster-cards" style="display:flex;gap:8px;overflow-x:auto;padding:10px;background:rgba(1,3,10,0.85);border:1px solid rgba(0,255,136,0.2);border-top:none;border-radius:0 0 4px 4px;min-height:168px;scrollbar-width:thin;scrollbar-color:rgba(0,255,136,0.2) transparent">
+        <div id="roster-add-btn" onclick="openNewAgentForm()" style="flex-shrink:0;width:100px;height:148px;border:1px dashed rgba(0,255,136,0.3);border-radius:6px;background:rgba(0,0,0,0.3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer">
+          <span style="font-size:22px;color:rgba(0,255,136,0.35)">+</span>
+          <span style="font-size:5.5px;color:rgba(0,255,136,0.4);letter-spacing:1px;text-align:center">DEPLOY AGENT</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEPT HEADS ROW -->
+    <div style="grid-column:1/-1;display:flex;flex-direction:column;margin-top:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(0,0,0,0.6);border:1px solid rgba(170,68,255,0.3);border-radius:4px 4px 0 0;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:2px">
+        <span style="color:#aa44ff">DEPARTMENT HEADS</span>
+        <span style="color:rgba(255,255,255,0.3);font-size:7px">12 HEADS - CLICK TO FLIP</span>
+      </div>
+      <div id="dept-head-cards" style="display:flex;gap:8px;overflow-x:auto;padding:10px;background:rgba(1,3,10,0.85);border:1px solid rgba(170,68,255,0.25);border-top:none;border-radius:0 0 4px 4px;min-height:168px;scrollbar-width:thin;scrollbar-color:rgba(170,68,255,0.2) transparent">
+      </div>
+    </div>
+
+    <!-- FACTORIES ROW -->
+    <div style="grid-column:1/-1;display:flex;flex-direction:column;margin-top:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,215,0,0.25);border-radius:4px 4px 0 0;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:2px">
+        <span style="color:#ffd700">INCOME FACTORIES</span>
+        <span style="color:rgba(255,255,255,0.3);font-size:7px" id="factory-total-badge">LOADING...</span>
+      </div>
+      <div id="factory-cards-row" style="display:flex;gap:8px;overflow-x:auto;padding:10px;background:rgba(1,3,10,0.85);border:1px solid rgba(255,215,0,0.2);border-top:none;border-radius:0 0 4px 4px;min-height:200px;scrollbar-width:thin;scrollbar-color:rgba(255,215,0,0.2) transparent">
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW: NEXUS + BRAIN + DREAM -->
+    <div style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px;min-height:220px">
+      <div class="tile" style="display:flex;flex-direction:column">
+        <div class="th" style="flex-shrink:0">
+          <span class="th-c">NEXUS GRAPH</span>
+          <div style="display:flex;gap:4px;align-items:center">
+            <span class="th-s" id="nexus-bottom-count">0 nodes</span>
+            <button onclick="nexusBotZoom(1.2)" style="padding:1px 6px;background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.2);color:#00e5ff;font-size:7px;border-radius:2px;cursor:pointer">+</button>
+            <button onclick="nexusBotZoom(0.8)" style="padding:1px 6px;background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.2);color:#00e5ff;font-size:7px;border-radius:2px;cursor:pointer">-</button>
+          </div>
+        </div>
+        <div style="flex:1;position:relative;overflow:hidden;cursor:grab" id="nexus-bottom-wrap">
+          <canvas id="nexus-bottom-canvas" style="width:100%;height:100%;display:block"></canvas>
+          <div style="position:absolute;bottom:5px;right:8px;font-size:5px;color:rgba(255,255,255,0.18);pointer-events:none">DRAG - SCROLL ZOOM</div>
+        </div>
+      </div>
+      <!-- DREAM MODULE -->
+      <div class="tile" style="display:flex;flex-direction:column;border-color:rgba(170,68,255,0.4)">
+        <div class="th" style="flex-shrink:0;border-bottom-color:rgba(170,68,255,0.2);background:rgba(8,0,20,0.8)">
+          <span style="color:#aa44ff;letter-spacing:2px;font-size:8px">🌙 IDLE DREAMING</span>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span id="dream-status-badge" style="font-size:6px;padding:1px 5px;border:1px solid rgba(170,68,255,0.35);border-radius:2px;color:#aa44ff">STANDBY</span>
+            <button onclick="triggerDream()" style="padding:2px 8px;background:rgba(170,68,255,0.1);border:1px solid rgba(170,68,255,0.35);color:#aa44ff;font-family:'JetBrains Mono',monospace;font-size:7px;border-radius:2px;cursor:pointer;letter-spacing:.5px">DREAM NOW</button>
+          </div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+          <div style="padding:8px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(170,68,255,0.1);flex-shrink:0;position:relative;overflow:hidden;min-height:72px">
+            <div style="position:absolute;width:54px;height:54px;border-radius:50%;border:1px solid rgba(170,68,255,0.22);top:8px;left:8px;animation:dreamSpinB 12s linear infinite"></div>
+            <div style="position:absolute;width:38px;height:38px;border-radius:50%;border:1px solid rgba(170,68,255,0.3);top:16px;left:16px;animation:dreamSpinB 8s linear infinite reverse"></div>
+            <div style="position:absolute;width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,0,255,0.28);top:24px;left:24px;animation:dreamSpinB 5s linear infinite"></div>
+            <div style="margin-left:66px;flex:1">
+              <div id="dream-state-txt" style="font-size:8px;color:#aa44ff;letter-spacing:1px;margin-bottom:3px">AWAITING IDLE TRIGGER</div>
+              <div style="font-size:7px;color:rgba(255,255,255,0.35);margin-bottom:5px">Activates after 15min idle · runs on vLLM</div>
+              <div style="height:3px;background:rgba(170,68,255,0.1);border-radius:2px;overflow:hidden">
+                <div id="dream-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#aa44ff,#ff00ff);transition:width 0.5s"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:3px">
+                <span id="dream-progress-txt" style="font-size:6.5px;color:rgba(255,255,255,0.28)">idle timer not started</span>
+                <span id="dream-count" style="font-size:6.5px;color:rgba(255,255,255,0.28)">0 dreams</span>
+              </div>
+            </div>
+          </div>
+          <div id="dream-ideas-list" style="flex:1;overflow-y:auto;padding:7px;scrollbar-width:thin;scrollbar-color:rgba(170,68,255,0.2) transparent">
+            <div style="font-size:8px;color:rgba(255,255,255,0.2);text-align:center;margin-top:20px;letter-spacing:1px">NO DREAMS YET — HIT DREAM NOW</div>
+          </div>
+        </div>
+      </div>
+      <!-- KNOWLEDGE INGESTOR - replaces Dream Module in bottom row -->
+      <div class="tile" style="display:flex;flex-direction:column;border-color:rgba(255,0,255,0.35)">
+        <div class="th-m" style="flex-shrink:0">
+          <span class="th-m" style="color:#ff00ff;letter-spacing:2px">📥 KNOWLEDGE INGESTOR</span>
+          <span style="font-size:7px;color:rgba(255,255,255,0.3)" id="ingest-status">READY</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;padding:10px;gap:8px">
+          <!-- URL ingest -->
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="font-size:8px;color:rgba(255,255,255,0.45);letter-spacing:1px;text-transform:uppercase">INGEST URL</div>
+            <div style="display:flex;gap:6px">
+              <input id="ingest-url-input" type="text" placeholder="https://docs.example.com/..." style="flex:1;background:rgba(0,0,0,0.6);border:1px solid rgba(255,0,255,0.25);border-radius:3px;padding:6px 9px;font-size:9px;color:#fff;font-family:'JetBrains Mono',monospace;outline:none"/>
+              <button onclick="ingestUrl()" style="padding:5px 10px;background:rgba(255,0,255,0.1);border:1px solid rgba(255,0,255,0.35);color:#ff00ff;font-family:'JetBrains Mono',monospace;font-size:8px;border-radius:3px;cursor:pointer;white-space:nowrap">INGEST</button>
+            </div>
+          </div>
+          <!-- Text ingest -->
+          <div style="display:flex;flex-direction:column;gap:4px;flex:1">
+            <div style="font-size:8px;color:rgba(255,255,255,0.45);letter-spacing:1px;text-transform:uppercase">INGEST TEXT / NOTES</div>
+            <textarea id="ingest-text-input" placeholder="Paste text, notes, research, code snippets, meeting notes..." style="flex:1;background:rgba(0,0,0,0.6);border:1px solid rgba(255,0,255,0.2);border-radius:3px;padding:7px 9px;font-size:9px;color:#fff;font-family:'JetBrains Mono',monospace;resize:none;outline:none;min-height:70px;line-height:1.6"></textarea>
+          </div>
+          <!-- Vault selector + action -->
+          <div style="display:flex;gap:6px;align-items:center">
+            <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+              <div style="font-size:7px;color:rgba(255,255,255,0.35);letter-spacing:.5px;text-transform:uppercase">TARGET VAULT</div>
+              <select id="ingest-vault-sel" style="width:100%;background:rgba(0,0,0,0.6);border:1px solid rgba(255,0,255,0.2);border-radius:3px;padding:5px 7px;font-size:9px;color:rgba(255,255,255,0.85);font-family:'JetBrains Mono',monospace">
+                <option>New-matrix-vault/knowledge</option>
+                <option>New-matrix-vault/daily</option>
+                <option>New-matrix-vault/skills</option>
+                <option>Matrix-Production/kb</option>
+                <option>Matrix-Production/projects</option>
+              </select>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+              <button onclick="ingestText()" style="padding:5px 12px;background:rgba(255,0,255,0.12);border:1px solid rgba(255,0,255,0.4);color:#ff00ff;font-family:'JetBrains Mono',monospace;font-size:8px;border-radius:3px;cursor:pointer;letter-spacing:.5px">SAVE TO VAULT</button>
+              <label style="padding:4px 12px;background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.25);color:#00e5ff;font-family:'JetBrains Mono',monospace;font-size:8px;border-radius:3px;cursor:pointer;letter-spacing:.5px;text-align:center">
+                DROP FILE
+                <input type="file" id="ingest-file-input" style="display:none" onchange="ingestFile(this)" multiple accept=".txt,.md,.pdf,.json,.csv,.py,.js,.html"/>
+              </label>
+            </div>
+          </div>
+          <!-- Status log -->
+          <div id="ingest-log" style="font-size:8px;color:rgba(0,255,136,0.7);background:rgba(0,0,0,0.4);border-radius:3px;padding:5px 8px;min-height:24px;font-family:'JetBrains Mono',monospace;border:1px solid rgba(0,229,255,0.1);line-height:1.5">Ready — drop files, paste text, or enter a URL to ingest into vault</div>
+        </div>
+      </div>
+    </div>
+
+    <script src="modules.js"></script>
+
   </div>
 </div>
 
-    <!-- Row 4 - Factory + Nexus + Screen + Pulse -->
-    <div class="r4">
-      <div class="tile">
-        <div class="th"><span class="th-c">⚡ FACTORY</span><span class="th-s" id="factory-status-badge">--</span></div>
-        <div style="padding:8px;flex:1;overflow:hidden">
-          <div id="factory-mini-list" style="font-family:'JetBrains Mono',monospace;font-size:7.5px;color:rgba(255,255,255,0.5)">Loading...</div>
-          <div style="margin-top:6px;padding-top:5px;border-top:1px solid rgba(0,229,255,0.1)">
-            <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:7px">
-              <span style="color:rgba(255,255,255,0.35)">MONTHLY</span>
-              <span class="gc" id="factory-mini-total">$0.00</span>
-            </div>
-            <div style="height:3px;background:rgba(0,229,255,0.08);border-radius:2px;margin-top:3px">
-              <div id="factory-mini-bar" style="height:100%;background:linear-gradient(90deg,#00e5ff,#ff00ff);width:0%;border-radius:2px;transition:width 1s"></div>
-            </div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:6px;color:rgba(255,255,255,0.3);text-align:right;margin-top:2px" id="factory-mini-pct">0% of goal</div>
-          </div>
-        </div>
-      </div>
-      <div class="tile">
-        <div class="th"><span class="th-c">◈ NEXUS GRAPH</span><span class="th-s" id="nexus-node-count">0 nodes</span></div>
-        <div style="flex:1;position:relative"><canvas id="nexus-mini-canvas" style="width:100%;height:100%;display:block"></canvas></div>
-      </div>
-      <div class="tile">
-        <div class="th"><span class="th-c">👁 SCREEN CTX</span><span class="th-s" id="screen-ctx-ts">--</span></div>
-        <div style="padding:8px;flex:1;overflow:hidden">
-          <div id="screen-ctx-window" style="font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--cyan);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
-          <div id="screen-ctx-text" style="font-family:'JetBrains Mono',monospace;font-size:6.5px;color:rgba(255,255,255,0.45);line-height:1.5;overflow:hidden;max-height:60px">No screen context yet.</div>
-          <button onclick="captureScreenNow()" style="margin-top:5px;width:100%;padding:3px;background:rgba(0,229,255,0.05);border:1px solid rgba(0,229,255,0.2);color:rgba(0,229,255,0.7);font-family:'JetBrains Mono',monospace;font-size:7px;cursor:pointer;border-radius:2px">▶ CAPTURE NOW</button>
-        </div>
-      </div>
-      <div class="tile">
-        <div class="th"><span class="th-c">◉ SYSTEM PULSE</span></div>
-        <div style="padding:8px;flex:1">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px">
-            <div style="background:rgba(0,0,0,0.4);border:1px solid rgba(0,229,255,0.12);border-radius:3px;padding:5px">
-              <div style="font-family:'JetBrains Mono',monospace;font-size:6px;color:rgba(255,255,255,0.35);margin-bottom:2px">WAKE WORD</div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#00ff88">LISTENING</div>
-              <div style="font-size:6px;color:rgba(255,255,255,0.25)">hermes·matrix·nexus</div>
-            </div>
-            <div style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,0,255,0.12);border-radius:3px;padding:5px">
-              <div style="font-family:'JetBrains Mono',monospace;font-size:6px;color:rgba(255,255,255,0.35);margin-bottom:2px">HOTKEY</div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--mag)">CTRL+SPACE</div>
-              <div style="font-size:6px;color:rgba(255,255,255,0.25)">focus HUD</div>
-            </div>
-          </div>
-          <div style="background:rgba(0,0,0,0.35);border:1px solid rgba(0,229,255,0.1);border-radius:3px;padding:5px">
-            <div style="font-family:'JetBrains Mono',monospace;font-size:6px;color:rgba(255,255,255,0.35);margin-bottom:3px">LAST WAKE EVENT</div>
-            <div id="last-wake-event" style="font-family:'JetBrains Mono',monospace;font-size:7px;color:rgba(255,255,255,0.45)">No events yet</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Row 5 - Activity Ticker -->
-    <div class="r5">
-      <div class="tile" style="min-height:40px;max-height:40px;justify-content:center">
-        <div style="display:flex;align-items:center;gap:0;height:100%;overflow:hidden">
-          <div style="padding:0 12px;border-right:1px solid rgba(0,229,255,0.12);font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--cyan);letter-spacing:2px;white-space:nowrap;flex-shrink:0">◉ ACTIVITY LOG</div>
-          <div id="activity-ticker" style="flex:1;overflow:hidden;padding:0 14px;font-family:'JetBrains Mono',monospace;font-size:7.5px;color:rgba(255,255,255,0.45);white-space:nowrap;text-overflow:ellipsis;transition:opacity 0.4s">Matrix OS online — all systems nominal — Factory Alpha LIVE — vLLM Qwen2.5-72B — Wake word active</div>
-          <div style="padding:0 12px;border-left:1px solid rgba(0,229,255,0.12);font-family:'JetBrains Mono',monospace;font-size:7px;color:rgba(255,255,255,0.25);flex-shrink:0" id="ticker-ts"></div>
-        </div>
-      </div>
-    </div>
 <!-- SETTINGS MODAL -->
 <div class="modal-ov" id="settings-modal" onclick="if(event.target===this)closeModal('settings-modal')">
   <div class="modal-box">
@@ -1737,7 +1830,7 @@ function setRecording(on){
   if(on){btn.style.borderColor='var(--danger)';btn.style.boxShadow='0 0 12px var(--danger)';btn.style.background='oklch(0.7 0.25 25/0.15)';icon.innerHTML='<rect x="6" y="6" width="12" height="12" rx="1"/>';icon.style.color='var(--danger)';const d=document.createElement('span');d.className='rec-dot ticking';btn.appendChild(d);updateChatStatus('DICTATING');setMatrixActive(true);}
   else{btn.style.borderColor='var(--cyan)';btn.style.boxShadow='0 0 8px var(--cyan)';btn.style.background='oklch(0.85 0.18 200/0.06)';icon.innerHTML='<rect x="9" y="3" width="6" height="10" rx="3"/><path d="M19 10a7 7 0 0 1-14 0M12 19v2M8 22h8"/>';icon.style.color='var(--cyan)';if(!streaming){updateChatStatus('READY');setMatrixActive(false);}}
 }
-window.addEventListener('keydown',e=>{if(e.code!=='Space'||e.repeat)return;const t=e.target;if(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)return;if(pttHeld)return;e.preventDefault();pttHeld=true;var _tm = window.startRecording || startRecording; if(!recording && _tm) _tm();});
+window.addEventListener('keydown',e=>{if(e.code!=='Space'||e.repeat)return;const t=e.target;if(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)return;if(pttHeld)return;e.preventDefault();pttHeld=true;if(!recording)startRecording();});
 window.addEventListener('keyup',e=>{if(e.code!=='Space')return;if(!pttHeld)return;e.preventDefault();pttHeld=false;if(recording)stopRecording();});
 
 /* ═══════════════════════════════════════════════════════════
@@ -1930,7 +2023,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- ── TELEMETRY FOOTER ── -->
-<div id="tel-bar">
+<div id="tel-bar" style="display:none">
   <div class="tel-seg">
     <div class="tel-dot free" id="tel-dot"></div>
     <span class="tel-label">MODEL</span>
@@ -2432,7 +2525,7 @@ function toggleAutoRoute(){
 document.addEventListener('DOMContentLoaded', function(){
   setTimeout(function(){
     var ta = document.getElementById('cmd-in');
-    if(tail -5 /tmp/matrix-bridge.log) return;
+    if(!ta) return;
     ta.addEventListener('keydown', function(e){
       if(e.key !== 'Enter' || e.shiftKey) return;
       var msg = ta.value.trim();
@@ -2496,9 +2589,7 @@ async function cfoBrief(){
     var r = await fetch('/factory/cfo-brief',{method:'POST'});
     var d = await r.json();
     if(d.ok && typeof addMsg==='function'){
-      addMsg('assistant', '## CFO FACTORY BRIEF
-
-' + d.brief);
+      addMsg('assistant', '## CFO FACTORY BRIEF\n\n' + d.brief);
     }
   }catch(e){ if(typeof addMsg==='function') addMsg('system','x '+e.message); }
 }
@@ -2911,9 +3002,6 @@ document.addEventListener('DOMContentLoaded', function(){
   setTimeout(function(){
     // Expose all nav button functions globally
     if(typeof toggleIngestor === 'function') window.toggleIngestor = toggleIngestor;
-    if(typeof toggleMic === 'function') window.toggleMic = toggleMic;
-    if(typeof startRecording === 'function') window.startRecording = startRecording;
-    if(typeof stopRecording === 'function') window.stopRecording = stopRecording;
     if(typeof generateDailySummary === 'function') window.generateDailySummary = generateDailySummary;
     if(typeof cfoBrief === 'function') window.cfoBrief = cfoBrief;
     if(typeof loadVaultFiles === 'function') window.loadVaultFiles = loadVaultFiles;
@@ -2924,15 +3012,7 @@ document.addEventListener('DOMContentLoaded', function(){
 // Safe wrappers that wait for functions to be ready
 function navToggleIngestor(){
   var el = document.getElementById('ingestor-zone');
-  if(!el){ console.warn('ingestor-zone not found'); return; }
-  var isOpen = el.style.display === 'block';
-  if(isOpen){
-    el.style.display = 'none';
-    el.classList.remove('open');
-  } else {
-    el.style.cssText = 'position:fixed !important;top:100px !important;left:50% !important;transform:translateX(-50%) !important;width:440px !important;background:#0a0d18 !important;border:1px solid #ff00ff50 !important;border-radius:5px !important;z-index:99999 !important;display:block !important;box-shadow:0 0 30px #ff00ff20;';
-    el.classList.add('open');
-  }
+  if(el){ el.classList.toggle('open'); if(el.classList.contains('open')){ el.style.cssText='position:fixed;top:100px;left:50%;transform:translateX(-50%);width:440px;background:#0a0d18;border:1px solid #ff00ff50;border-radius:5px;z-index:99999;display:block;box-shadow:0 0 30px #ff00ff20,inset 0 0 20px #00000040;'; } else { el.style.display='none'; } }
 }
 function navCfoBrief(){
   if(window.cfoBrief){ window.cfoBrief(); return; }
@@ -3110,278 +3190,5 @@ setTimeout(function(){
   }, 2000);
 }, 3000);
 </script>
-
-<!-- KNOWLEDGE INGESTOR PANEL -->
-<div id="ingestor-zone" style="display:none">
-  <div class="ingestor-hdr">
-    📥 KNOWLEDGE INGESTOR
-    <button onclick="navToggleIngestor()" style="background:transparent;border:none;color:#aa44ff44;cursor:pointer;font-size:10px">✕</button>
-  </div>
-  <div class="ingestor-body">
-    <div class="ingestor-drop" onclick="document.getElementById('ingestor-file-input').click()">
-      <div class="ingestor-drop-title">⬇ DROP FILE OR CLICK TO SELECT</div>
-      <div class="ingestor-drop-sub">Chunks into 450-line chapters → saved to Obsidian vault</div>
-    </div>
-    <input type="file" id="ingestor-file-input" style="display:none" accept=".txt,.md,.pdf" onchange="handleIngestorFile(this)">
-    <div style="display:flex;gap:5px;margin-bottom:6px">
-      <input id="ingestor-url" class="form-input" placeholder="Or paste a URL to ingest..." style="flex:1;font-size:8px;padding:4px 6px">
-      <button onclick="ingestUrl()" style="padding:4px 8px;background:#aa44ff12;border:1px solid #aa44ff25;color:#aa44ff;font-family:inherit;font-size:7px;cursor:pointer;border-radius:2px">FETCH</button>
-    </div>
-    <div style="display:flex;gap:5px;margin-bottom:6px">
-      <input id="ingestor-topic" class="form-input" placeholder="Topic name..." style="flex:1;font-size:8px;padding:4px 6px">
-      <select id="ingestor-vault" style="background:#060d14;border:1px solid #aa44ff18;color:#aa44ff88;font-size:7px;padding:3px 4px;font-family:inherit;border-radius:2px">
-        <option value="knowledge">knowledge vault</option>
-        <option value="production">production vault</option>
-      </select>
-    </div>
-    <div class="ingestor-log" id="ingestor-log"></div>
-  </div>
-</div>
-
-<style>
-#ingestor-zone{
-  position:fixed;top:60px;left:50%;transform:translateX(-50%);
-  width:440px;background:#0a0d18;
-  border:1px solid #aa44ff50;border-radius:5px;
-  z-index:99999;box-shadow:0 0 30px #aa44ff18;
-}
-.ingestor-hdr{display:flex;align-items:center;justify-content:space-between;
-  padding:6px 10px;border-bottom:1px solid #aa44ff18;
-  font-size:8px;letter-spacing:1.5px;color:#aa44ff88;font-weight:bold}
-.ingestor-body{padding:10px}
-.ingestor-drop{background:#060d14;border:1px dashed #aa44ff20;border-radius:3px;
-  padding:12px;text-align:center;margin-bottom:8px;cursor:pointer}
-.ingestor-drop-title{font-size:8px;color:#aa44ff66;font-weight:bold;margin-bottom:2px}
-.ingestor-drop-sub{font-size:6px;color:#ffffff20}
-.ingestor-log{max-height:80px;overflow-y:auto;margin-top:6px}
-.ingestor-log-item{font-size:7px;padding:2px 0;border-bottom:1px solid #aa44ff08;
-  display:flex;justify-content:space-between;color:#ffffff44}
-.ingestor-log-item .ok{color:#00ff88}
-
-.r4{grid-column:1/-1;display:grid;gap:12px;grid-template-columns:1fr 1fr 1fr 1fr;min-height:150px;}
-.r5{grid-column:1/-1;display:grid;gap:12px;grid-template-columns:1fr;}
-/* ── MATRIX OS GLOBAL EFFECTS ──────────────────────────────── */
-@keyframes rotateSlow{to{transform:rotate(360deg)}}
-@keyframes cornerPulse{0%,100%{opacity:.5}50%{opacity:1}}
-@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
-@keyframes neonFlicker{0%,95%,100%{opacity:1}96%,98%{opacity:.4}}
-@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulseGlow{0%,100%{box-shadow:0 0 6px currentColor}50%{box-shadow:0 0 18px currentColor,0 0 30px currentColor}}
-
-/* scanline overlay */
-#hud::before{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
-  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,229,255,0.015) 2px,rgba(0,229,255,0.015) 4px);
-}
-
-/* tile corner animation */
-.tile::before,.tile-m::before{animation:cornerPulse 3s ease-in-out infinite}
-.tile::after,.tile-m::after{animation:cornerPulse 3s ease-in-out infinite reverse}
-
-/* glowing status dots */
-.status-dot-online{background:#00ff88;box-shadow:0 0 6px #00ff88,0 0 12px #00ff8866;animation:pulseGlow 2s ease-in-out infinite}
-.status-dot-idle{background:#ffd700;box-shadow:0 0 6px #ffd700}
-.status-dot-offline{background:rgba(255,255,255,0.15)}
-
-/* card flip */
-.card-wrap-hud{perspective:800px}
-.card-inner-hud{transform-style:preserve-3d;transition:transform .48s cubic-bezier(.4,0,.2,1)}
-.card-wrap-hud.flipped .card-inner-hud{transform:rotateY(180deg)}
-.card-front,.card-back-hud{backface-visibility:hidden;position:absolute;width:100%;height:100%;border-radius:5px;overflow:hidden}
-.card-back-hud{transform:rotateY(180deg)}
-
-/* glass input fields */
-.glass-input{
-  background:rgba(0,0,0,0.65);
-  border:1px solid rgba(0,229,255,0.18);
-  border-radius:3px;
-  color:#ffffff;
-  font-family:'JetBrains Mono',monospace;
-  transition:border-color .2s,box-shadow .2s;
-}
-.glass-input:focus{
-  outline:none;
-  border-color:rgba(0,229,255,0.5);
-  box-shadow:0 0 12px rgba(0,229,255,0.15);
-}
-.glass-select{
-  background:rgba(0,0,0,0.65);
-  border:1px solid rgba(0,229,255,0.15);
-  border-radius:3px;
-  color:rgba(255,255,255,0.75);
-  font-family:'JetBrains Mono',monospace;
-}
-
-/* nav button hover glow */
-.nav-btn{transition:all .15s}
-.nav-btn:hover{
-  color:#00e5ff;
-  border-color:rgba(0,229,255,0.5);
-  box-shadow:0 0 8px rgba(0,229,255,0.2),inset 0 0 8px rgba(0,229,255,0.05);
-}
-
-/* tile header glow line */
-.th,.th-m,.th-a,.th-g,.th-gold,.th-d{
-  position:relative;
-}
-.th::after,.th-m::after{
-  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,currentColor,transparent);
-  opacity:0.15;
-}
-
-/* heartbeat animation for bridge dot */
-@keyframes heartbeat{0%,100%{transform:scale(1)}15%{transform:scale(1.25)}30%{transform:scale(1)}45%{transform:scale(1.15)}70%{transform:scale(1)}}
-#bridge-dot{animation:heartbeat 1.8s ease-in-out infinite}
-
-/* factory progress bar shimmer */
-@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-.factory-bar-active{
-  background:linear-gradient(90deg,#00e5ff44,#00e5ff,#00ff88,#00e5ff44);
-  background-size:200% 100%;
-  animation:shimmer 2s linear infinite;
-}
-
-/* dream rings */
-@keyframes dreamSpin{to{transform:rotate(360deg)}}
-.dream-ring{
-  position:absolute;border-radius:50%;border:1px solid;
-  animation:dreamSpin linear infinite;
-  transform-origin:center center;
-}
-</style>
-
-<script>
-function addIngestorLog(name, status, chunks){
-  var log=document.getElementById('ingestor-log');
-  if(!log)return;
-  var div=document.createElement('div');
-  div.className='ingestor-log-item';
-  div.innerHTML='<span>'+name.substring(0,35)+'</span><span class="'+(status==='ok'?'ok':'proc')+'">'+
-    (status==='ok'?'+ '+chunks+' chunks':'processing...')+'</span>';
-  log.insertBefore(div, log.firstChild);
-}
-async function ingestText(text, topic, vault){
-  var v=vault||document.getElementById('ingestor-vault').value;
-  var t=topic||(document.getElementById('ingestor-topic').value.trim()||'untitled-'+Date.now());
-  addIngestorLog(t,'proc',0);
-  try{
-    var r=await fetch('/ingest/text',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({text:text,topic:t,vault:v})});
-    var d=await r.json();
-    if(d.ok){ addIngestorLog(t,'ok',d.chunks);
-      if(typeof addMsg==='function') addMsg('system','Ingested: '+t+' -> '+d.chunks+' chunks -> '+v+' vault');
-    }
-  }catch(e){ console.warn(e); }
-}
-async function ingestUrl(){
-  var url=document.getElementById('ingestor-url').value.trim();
-  if(!url)return;
-  var t=document.getElementById('ingestor-topic').value.trim()||url.split('/')[2];
-  var v=document.getElementById('ingestor-vault').value;
-  addIngestorLog(url,'proc',0);
-  try{
-    var r=await fetch('/ingest/url',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({url:url,topic:t,vault:v})});
-    var d=await r.json();
-    if(d.ok){ addIngestorLog(t,'ok',d.chunks);
-      if(typeof addMsg==='function') addMsg('system','URL ingested: '+t+' -> '+d.chunks+' chunks');
-      document.getElementById('ingestor-url').value='';
-    }
-  }catch(e){ console.warn(e); }
-}
-function handleIngestorFile(input){
-  var file=input.files[0]; if(!file)return;
-  var topic=document.getElementById('ingestor-topic').value.trim()||file.name.replace(/\.[^.]+$/,'');
-  var vault=document.getElementById('ingestor-vault').value;
-  var reader=new FileReader();
-  reader.onload=function(e){ ingestText(e.target.result,topic,vault); };
-  reader.readAsText(file);
-  input.value='';
-}
-</script>
-
-<script>
-async function loadFactoryMini(){
-  try{
-    var r=await fetch('/factory/status');var d=await r.json();if(!d.factories)return;
-    var list=document.getElementById('factory-mini-list');
-    var total=document.getElementById('factory-mini-total');
-    var bar=document.getElementById('factory-mini-bar');
-    var pct=document.getElementById('factory-mini-pct');
-    var badge=document.getElementById('factory-status-badge');
-    if(list) list.innerHTML=d.factories.map(function(f){
-      var c=f.status==='LIVE'||f.status==='PROD'?'#00ff88':f.status==='IDLE'?'rgba(255,255,255,0.25)':'#ffd700';
-      return '<div style="display:flex;justify-content:space-between;margin-bottom:3px;padding-bottom:2px;border-bottom:1px solid rgba(255,255,255,0.04)">'
-        +'<span style="color:rgba(255,255,255,0.55);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+f.name+'</span>'
-        +'<span style="color:'+c+';font-size:6px">'+f.status+'</span>'
-        +'<span style="color:rgba(255,255,255,0.45)">${'+f.revenue_month.toFixed(0)+'}</span>'
-        +'</div>';
-    }).join('');
-    if(total) total.textContent='$'+d.totals.month.toFixed(2);
-    if(bar) bar.style.width=Math.min(100,d.totals.progress_pct)+'%';
-    if(pct) pct.textContent=d.totals.progress_pct+'% of $10K';
-    if(badge) badge.textContent=d.totals.progress_pct+'% goal';
-  }catch(e){}
-}
-async function loadNexusMini(){
-  try{
-    var r=await fetch('/nexus/graph');var d=await r.json();
-    var el=document.getElementById('nexus-node-count');
-    if(el) el.textContent=(d.total_files||0)+' nodes';
-    var canvas=document.getElementById('nexus-mini-canvas');
-    if(!canvas||!d.nodes) return;
-    var W=canvas.offsetWidth||200,H=canvas.offsetHeight||120;
-    canvas.width=W;canvas.height=H;
-    var ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);
-    var nodes=d.nodes.slice(0,25).map(function(n,i){
-      var a=(i/25)*Math.PI*2,rad=0.28+Math.random()*0.22;
-      return {x:W/2+Math.cos(a)*W*rad*0.42,y:H/2+Math.sin(a)*H*rad*0.42,color:n.color||'#00e5ff',size:n.type==='core'?3:1.5};
-    });
-    if(d.edges) d.edges.forEach(function(e){
-      var s=nodes[e.source],t=nodes[e.target];if(!s||!t)return;
-      ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(t.x,t.y);
-      ctx.strokeStyle='rgba(0,229,255,0.12)';ctx.lineWidth=0.5;ctx.stroke();
-    });
-    nodes.forEach(function(n){
-      ctx.beginPath();ctx.arc(n.x,n.y,n.size,0,Math.PI*2);
-      ctx.fillStyle=n.color;ctx.shadowBlur=4;ctx.shadowColor=n.color;ctx.fill();ctx.shadowBlur=0;
-    });
-  }catch(e){}
-}
-async function loadScreenContext(){
-  try{
-    var r=await fetch('/screen/context');var d=await r.json();
-    var win=document.getElementById('screen-ctx-window');
-    var txt=document.getElementById('screen-ctx-text');
-    var ts=document.getElementById('screen-ctx-ts');
-    if(win) win.textContent=d.window||'';
-    if(txt) txt.textContent=d.text?d.text.substring(0,180):'No screen context yet.';
-    if(ts&&d.ts){var ago=Math.round((Date.now()/1000-d.ts)/60);ts.textContent=ago<1?'just now':ago+'m ago';}
-  }catch(e){}
-}
-async function captureScreenNow(){
-  var btn=event.target;btn.textContent='CAPTURING...';
-  try{
-    var r=await fetch('/screen/capture',{method:'POST'});var d=await r.json();
-    btn.textContent=d.ok?'CAPTURED':'FAILED';
-    setTimeout(function(){btn.textContent='CAPTURE NOW';},2000);
-    if(d.ok) loadScreenContext();
-  }catch(e){btn.textContent='CAPTURE NOW';}
-}
-var _tmsgs=['Matrix OS online — all systems nominal','Factory Alpha: LIVE on Etsy via Printify','vLLM: Qwen2.5-72B AWQ — 4096 ctx','Wake word: hermes / matrix / nexus','CEO Router: 12 dept heads active','Screen OCR: semantic awareness online','Iris Vault: PostgreSQL pgvector — coming soon'];
-var _tidx=0;
-function tickerNext(){
-  var el=document.getElementById('activity-ticker');var ts=document.getElementById('ticker-ts');
-  if(el){el.style.opacity='0';setTimeout(function(){el.textContent=_tmsgs[_tidx++%_tmsgs.length];el.style.opacity='1';},350);}
-  if(ts) ts.textContent=new Date().toLocaleTimeString();
-}
-document.addEventListener('DOMContentLoaded',function(){
-  setTimeout(function(){
-    loadFactoryMini();loadNexusMini();loadScreenContext();tickerNext();
-    setInterval(loadFactoryMini,30000);setInterval(loadNexusMini,60000);
-    setInterval(loadScreenContext,30000);setInterval(tickerNext,8000);
-  },4000);
-});
-</script></body>
+</body>
 </html>
