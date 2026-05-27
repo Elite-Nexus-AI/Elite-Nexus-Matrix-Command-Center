@@ -233,7 +233,7 @@
       "path": "modules.js",
       "type": "other",
       "color": "#444444",
-      "size": 67694,
+      "size": 69451,
       "imports": []
     },
     {
@@ -260,7 +260,7 @@
       "path": "config.sh",
       "type": "shell",
       "color": "#aa44ff",
-      "size": 1943,
+      "size": 3167,
       "imports": []
     },
     {
@@ -300,7 +300,7 @@
       "path": "bridge.py",
       "type": "core",
       "color": "#00e5ff",
-      "size": 79595,
+      "size": 93892,
       "imports": [
         "from __future__ import annotations",
         "import asyncio, base64, io, json, os, re, subprocess, tempfile, time, wave",
@@ -338,7 +338,7 @@
       "path": "index.html",
       "type": "core",
       "color": "#ff00ff",
-      "size": 179799,
+      "size": 180176,
       "imports": []
     },
     {
